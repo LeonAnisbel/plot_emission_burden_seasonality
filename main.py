@@ -31,16 +31,16 @@ print('BURDEN')
  #   plot_maps.plot_emi_burden_maps(emi_tot, burden_tot, 'MOA')
 
 
-#dict_seasonality = read_files.read_vars_per_months()
-#plot_seasonality.plot_all_seasonality(dict_seasonality)
-#plot_seasonality_region(dict_seasonality)
-#exit()
+dict_seasonality = read_files.read_vars_per_months()
+plot_seasonality.plot_all_seasonality(dict_seasonality)
+plot_seasonality.plot_seasonality_region(dict_seasonality)
+exit()
 
 
 sum_month, win_month = [7, 8, 9], [1, 2, 3]
 omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, ice = read_files.read_vars_per_seasons(sum_month, win_month)
 #print(sum_month, win_month)
-fac = global_vars.unit_factor  # factor to convert kg to ng
+fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 
 plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
                                         emi_ss[0]['emi_SS']*fac/1e3,
