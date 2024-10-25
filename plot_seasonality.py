@@ -19,43 +19,42 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
     print('starting plots')
     t_ax = C_atmos[0].time
     ax = axes[0]
+    ax0 = ax.twinx()
     ax1 = ax.twinx()
+    ax1.spines.right.set_position(("axes", 1.2))
 
     ax2 = axes[1]
     ax3 = ax2.twinx()
-    #     ax2.set_yscale('log')
     ax4 = ax2.twinx()
     ax4.spines.right.set_position(("axes", 1.2))
+
+    p3, = ax.plot(t_ax,
+                  C_atmos[0].values,
+                  label='SIC',
+                  linewidth=1.5,
+                  color='b')
+    p31, = ax0.plot(t_ax,
+                    C_atmos[1],
+                    label='SST',
+                    linewidth=1.5,
+                    color='g')
+    p32, = ax1.plot(t_ax,
+                    C_atmos[2],
+                    label='Wind 10m',
+                    linewidth=1.5,
+                    color='g')
 
     p2, = ax2.plot(t_ax,
                    C_emi[0].values,
                    label='PCHO$_{aer}$',
                    linewidth=1.5,
                    color='b')
-    # fill_between_shade(ax2,t_ax, C_omf[0].values,std_omf[0],'b')
-    p3, = ax.plot(t_ax,
-                  C_atmos[0].values,
-                  label='SIC',
-                  linewidth=1.5,
-                  color='b')
-    # fill_between_shade(ax,t_ax, C_conc[0].values,std_conc[0],'b')
 
-    print(t_ax, C_emi[0].values)
     p21, = ax2.plot(t_ax,
                     C_emi[1].values,
                     label='DCAA$_{aer}$',
                     linewidth=1.5,
                     color='g')
-    # fill_between_shade(ax2,t_ax, C_omf[1].values,std_omf[1],'g')
-
-    p31, = ax1.plot(t_ax,
-                    C_atmos[1],
-                    label='SST',
-                    linewidth=1.5,
-                    color='g')
-
-    # fill_between_shade(ax,t_ax, C_conc[1].values,std_conc[1],'g')
-
     p22, = ax3.plot(t_ax,
                     C_emi[2].values,
                     label='PL$_{aer}$',
@@ -67,9 +66,6 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                     linewidth=1.5,
                     color='m')
 
-    # fill_between_shade(ax3,t_ax, C_omf[2].values,std_omf[2],'darkred')
-    # p32, = ax.plot(t_ax,C_conc[2],label= 'PL$_{sw}$',linewidth = 1.5,color = 'darkred')
-    # fill_between_shade(ax,t_ax, C_conc[2].values,std_conc[2],'darkred')
 
     ax.set_ylabel("SIC",
                   fontsize=font)
@@ -107,8 +103,8 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                     colors='m')
 
     fig.legend(loc='upper left',
-               handles=[p3, p31],
-               ncol=2,
+               handles=[p3, p31, p32],
+               ncol=3,
                fontsize=font,
                bbox_to_anchor=(0.1, 1)
                )
@@ -217,6 +213,8 @@ def plot_all_seasonality(dict_seasonality):
 
     seaice_mean = get_mean(dict_seasonality['echam']['seasonality']['seaice'])
     sst_mean = get_mean(dict_seasonality['echam']['seasonality']['tsw']) - 273.16
+    wind = get_mean(dict_seasonality['vphysc']['seasonality']['velo10m'])
+
     print('finished computing means')
     print(seaice_mean, sst_mean)
     plot_monthly_series_pannel(ax, fig,
@@ -225,7 +223,8 @@ def plot_all_seasonality(dict_seasonality):
                                 emi_lip_mean,
                                 emi_ss_mean],
                                [seaice_mean,
-                                sst_mean],
+                                sst_mean,
+                                wind],
                                [],
                                [],
                                'title',
@@ -262,17 +261,29 @@ def plot_seasonality_region(dict_seasonality):
 
     seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'])
     sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16)
+    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'])
+
+    atmo_vars = [seaice_mean,
+                 sst_mean,
+                 wind_mean,
+                 wind_mean]
+    atmos_var_title = ['SIC',
+                       'SSt',
+                       'Wind 10m',
+                       'Wind 10m']
+
     print('finished computing means')
 
     lims = []
     for i in range(len(emi_means)):
-        plot_seanonality_reg_species(seaice_mean,
+        plot_seanonality_reg_species(atmo_vars[i],
+                                     atmos_var_title[i],
                                      emi_means[i],
                                      var_ids[i],
                                      lims)
 
 
-def plot_seanonality_reg_species(C_ice, C_emi, var_id, lims,):
+def plot_seanonality_reg_species(C_ice, title, C_emi, var_id, lims,):
     fig, axs = plt.subplots(1, 2,
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
@@ -291,7 +302,7 @@ def plot_seanonality_reg_species(C_ice, C_emi, var_id, lims,):
             lw = 1.5
 
         ylabels = [f'Emission flux of {var_id}',
-                   'SIC']
+                   title]
 
         p2, p3 = plot_seasons_reg(axs,
                                   C_emi,
