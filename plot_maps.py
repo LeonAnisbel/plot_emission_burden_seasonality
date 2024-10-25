@@ -92,21 +92,26 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
     customize_axis(axes, titles, polar_proj=polar_proj)
 
 
-def plot_emi_burden_global(moa_emi, moa_burden, var):
+def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False):
     fig = create_fig(10, 7)
 
     (subfig1, subfig2) = fig.subfigures(nrows=1, ncols=2)
     subfigs = [subfig1, subfig2]
 
+    title = f'global_emiss_burden_{var}.png'
     moa = [moa_emi, moa_burden]
     names = global_vars.titles[var]
     units = global_vars.unit[var]
     vm = global_vars.vmax[var]
     colorb = global_vars.colorbar[var]
-    for idx, subf in enumerate(subfigs):
-        each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx])
+    if polar_proj:
+        title = f'arctic_emiss_burden_{var}.png'
+        vm = [[0, 1.2],[0, 0.005]] 
 
-    plt.savefig(global_vars.plot_dir + f'global_emiss_burden_{var}.png', dpi=300, bbox_inches="tight")
+
+    for idx, subf in enumerate(subfigs):
+        each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
+    plt.savefig(global_vars.plot_dir + title, dpi=300, bbox_inches="tight")
     #     fig.tight_layout()
 
 
@@ -143,14 +148,19 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False
     #     ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
     #                   linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
-    ic = axes.contourf(ice.lon, ice.lat, ice, levels=4, cmap='Greys_r',
-                       transform=ccrs.PlateCarree())
+    ic = axes.contourf(ice.lon, 
+            ice.lat, 
+            ice, 
+            np.arange(10, 110, 30), #levels=5, 
+            cmap='Greys_r',
+            transform=ccrs.PlateCarree())
+
 
     customize_axis(axes, titles, polar_proj=polar_proj)
     return ic
 
 
-def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, title, var_id):
+def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_id, title, var):
     fig = create_fig(14, 10)  #layout='constrained',constrained_layout=True
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6) = fig.subfigures(nrows=2,
@@ -160,13 +170,15 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, titl
     subfigs_winter = [subfig1, subfig2, subfig3]
     subfigs_summer = [subfig4, subfig5, subfig6]
 
-    moa_summer = [moa_emi_summer['emi_POL'], moa_emi_summer['emi_PRO'], moa_emi_summer['emi_LIP']]
-    moa_winter = [moa_emi_winter['emi_POL'], moa_emi_winter['emi_PRO'], moa_emi_winter['emi_LIP']]
+    moa_summer = [moa_emi_summer[f'{var_id}_POL'], moa_emi_summer[f'{var_id}_PRO'], moa_emi_summer[f'{var_id}_LIP']]
+    moa_winter = [moa_emi_winter[f'{var_id}_POL'], moa_emi_winter[f'{var_id}_PRO'], moa_emi_winter[f'{var_id}_LIP']]
 
+    print('summer', moa_summer[0].max().values, moa_summer[1].max().values, moa_summer[2].max().values)
+    print('winter', moa_winter[0].max().values, moa_winter[1].max().values,moa_winter[2].max().values)
     names_winter = [[r'PCHO$_{aer}$', r'$\bf{(a)}$'], [r'DCAA$_{aer}$', r'$\bf{(b)}$'], [r'PL$_{aer}$', r'$\bf{(c)}$']]
     names_summer = [['PCHO$_{aer}$', r'$\bf{(d)}$'], ['DCAA$_{aer}$', r'$\bf{(e)}$'], ['PL$_{aer}$', r'$\bf{(f)}$']]
-    units = global_vars.unit_arctic[var_id][0]
-    vm = global_vars.vmax_arctic[var_id]
+    units = global_vars.unit_arctic[var]['var_id'][0]
+    vm = global_vars.vmax_arctic[var]['var_id']
     for idx, subf in enumerate(subfigs_summer):
         ic = each_fig_season(subf,
                              moa_summer[idx],
