@@ -44,7 +44,7 @@ fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 
 plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
                                         emi_ss[0]['emi_SS']*fac/1e3,
-                                        wind[0]['wind10'],
+                                        wind[0]['velo10m'],
                                         sst[0]['tsw'] - 273],
                                        ice[0],
                                        'OMF_ss_emi_wind_sst_late',

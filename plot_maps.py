@@ -177,8 +177,8 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
     print('winter', moa_winter[0].max().values, moa_winter[1].max().values,moa_winter[2].max().values)
     names_winter = [[r'PCHO$_{aer}$', r'$\bf{(a)}$'], [r'DCAA$_{aer}$', r'$\bf{(b)}$'], [r'PL$_{aer}$', r'$\bf{(c)}$']]
     names_summer = [['PCHO$_{aer}$', r'$\bf{(d)}$'], ['DCAA$_{aer}$', r'$\bf{(e)}$'], ['PL$_{aer}$', r'$\bf{(f)}$']]
-    units = global_vars.unit_arctic[var]['var_id'][0]
-    vm = global_vars.vmax_arctic[var]['var_id']
+    units = global_vars.unit_arctic[var][var_id][0]
+    vm = global_vars.vmax_arctic[var][var_id]
     for idx, subf in enumerate(subfigs_summer):
         ic = each_fig_season(subf,
                              moa_summer[idx],

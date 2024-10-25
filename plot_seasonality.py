@@ -82,6 +82,9 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
     ax3.set_ylabel("Emission flux PL$_{aer}$",
                    color='darkred',
                    fontsize=font)
+    ax4.set_ylabel("Emission flux SS$_{aer}$",
+                   color='m',
+                   fontsize=font)
     #    ax3.set_ylim(0,0.5)
 
     # ax.set_ylim(limits[0])
@@ -111,8 +114,8 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                )
 
     fig.legend(loc='upper right',
-               handles=[p2, p21, p22],
-               ncol=3,
+               handles=[p2, p21, p22, p23],
+               ncol=2,
                fontsize=font,
                bbox_to_anchor=(0.94, 1))
 
@@ -209,6 +212,7 @@ def plot_all_seasonality(dict_seasonality):
     emi_pol_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_POL']) * fac
     emi_pro_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_PRO']) * fac
     emi_lip_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_LIP']) * fac
+    emi_ss_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_SS']) * fac
     print('finished computing means emi')
 
     seaice_mean = get_mean(dict_seasonality['echam']['seasonality']['seaice'])
@@ -218,7 +222,8 @@ def plot_all_seasonality(dict_seasonality):
     plot_monthly_series_pannel(ax, fig,
                                [emi_pol_mean,
                                 emi_pro_mean,
-                                emi_lip_mean],
+                                emi_lip_mean,
+                                emi_ss_mean],
                                [seaice_mean,
                                 sst_mean],
                                [],
@@ -249,10 +254,11 @@ def get_mean_reg(data_ds):
 def plot_seasonality_region(dict_seasonality):
     emi_means = [get_mean_reg(dict_seasonality['emi']['seasonality']['emi_POL'] * fac),
                  get_mean_reg(dict_seasonality['emi']['seasonality']['emi_PRO'] * fac),
-                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * fac)]
+                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * fac),
+                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * fac)]
     print('finished computing means emi')
 
-    var_ids = ['PCHO', 'DCAA', 'PL']
+    var_ids = ['PCHO', 'DCAA', 'PL', 'SS']
 
     seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'])
     sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16)
