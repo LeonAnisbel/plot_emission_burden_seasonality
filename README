@@ -1,0 +1,7 @@
+This project reads ECHAM-HAM data of emission flux and burden to generate global and regional plots.
+The conda environment for this project is contained in env.yml file. Please, run <conda activate env.yml> to set up the environment for this project.
+
+Run main.py to create the figures of emission flux and burden of total marine organic aerosols (PCHO + DCAA + PL). The first part of the script generates the global plots (Fig. 6 of Leon-Marcos et al. 2024). It depends on the global fields generated using the model output with the bash scripts in folder "extract".  
+The second part of main.py script generates the Arctic plot for each organic aerosol group per season as defined with the variable "months".
+
+
