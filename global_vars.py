@@ -24,7 +24,7 @@ vmax_arctic = {'MOA': {'emi': [0.04, 0.2, 1.7],
                        'burden': [0.005, 0.001, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}
 unit_arctic = {'MOA': {'emi': ['${ng m^{-2} s^{-1}}$'],
-                       'burden': ['${mg m^{-2}$']},
+                       'burden': ['$mg m^{-2}$']},
                'wind': ['   ', '${{\mu}g m^{-2} s^{-1}}$',
                         'm/s', '$^{o}C$']}
 factor_kg_to_ng = 1e12
