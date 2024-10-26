@@ -21,12 +21,14 @@ colorbar = {'MOA': ['Spectral_r', 'Spectral_r'],
             'SS': ['Spectral_r', 'Spectral_r'],
             'wind': ['Spectral_r', 'Spectral_r', 'jet', 'rainbow']}
 vmax_arctic = {'MOA': {'emi': [0.04, 0.2, 1.7],
-                       'burden': [0.005, 0.001, 0.1]},
+                       'burden': [0.001, 0.01, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}
 unit_arctic = {'MOA': {'emi': ['${ng m^{-2} s^{-1}}$'],
                        'burden': ['$mg m^{-2}$']},
                'wind': ['   ', '${{\mu}g m^{-2} s^{-1}}$',
                         'm/s', '$^{o}C$']}
 factor_kg_to_ng = 1e12
+factor_kg_to_mg = 1e6
+
 files_id_30yr = '_mean_whole_grid_glb_annual_total_1990-2019.nc'
 files_id_10yr = '_mean_whole_grid_glb_annual_total_2009_2019.nc'

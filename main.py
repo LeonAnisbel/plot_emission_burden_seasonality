@@ -43,8 +43,9 @@ plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
                                        'OMF_ss_emi_wind_sst_late',
                                        'wind')
 print('start plot')
-plot_maps.plot_emi_season(burden_moa[0] * 1e6,
-                          burden_moa[1] * 1e6,
+fac_mg = global_vars.factor_kg_to_mg  # factor to convert kg to mg
+plot_maps.plot_emi_season(burden_moa[0] * fac_mg,
+                          burden_moa[1] * fac_mg,
                           ice[0],
                           ice[1],
                           'burden',

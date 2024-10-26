@@ -18,111 +18,70 @@ font = 14
 def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, title, limits, pos, left_axis=False):
     print('starting plots')
     t_ax = C_atmos[0].time
-    ax = axes[0]
-    ax0 = ax.twinx()
-    ax1 = ax.twinx()
-    ax1.spines.right.set_position(("axes", 1.2))
+    ax0 = axes[0]
+    ax1 = ax0.twinx()
+    ax2 = ax0.twinx()
+    ax2.spines.right.set_position(("axes", 1.2))
 
-    ax2 = axes[1]
-    ax3 = ax2.twinx()
-    ax4 = ax2.twinx()
-    ax4.spines.right.set_position(("axes", 1.2))
+    ax3 = axes[1]
+    ax4 = ax3.twinx()
+    ax5 = ax3.twinx()
+    ax5.spines.right.set_position(("axes", 1.2))
 
-    p3, = ax.plot(t_ax,
-                  C_atmos[0].values,
-                  label='SIC',
-                  linewidth=1.5,
-                  color='b')
-    p31, = ax0.plot(t_ax,
-                    C_atmos[1],
-                    label='SST',
-                    linewidth=1.5,
-                    color='g')
-    p32, = ax1.plot(t_ax,
-                    C_atmos[2],
-                    label='Wind 10m',
-                    linewidth=1.5,
-                    color='g')
+    axes = [ax0, ax0, ax1, ax2, ax3, ax4, ax5]
+    variables = [C_emi[0], C_emi[1], C_emi[2], C_emi[3],
+                 C_atmos[0], C_atmos[1], C_atmos[2]]
+    labels = ['PCHO$_{aer}$', 'DCAA$_{aer}$', 'PL$_{aer}$',
+              'SS$_{aer}$', 'SIC', 'SST', 'Wind 10m']
+    legend = []
+    colors = ['b', 'g', 'darkred', 'm',
+              'lightblue', 'gray', 'k']
+    for i in range(len(variables)):
+        p, = axes[i].plot(t_ax,
+                          variables[i].values,
+                          label=labels[i],
+                          linewidth=1.5,
+                          color=colors[i])
+        legend.append(p)
 
-    p2, = ax2.plot(t_ax,
-                   C_emi[0].values,
-                   label='PCHO$_{aer}$',
-                   linewidth=1.5,
-                   color='b')
+        if labels[i] == 'PCHO$_{aer}$' or labels[i] == 'DCAA$_{aer}$':
+            ylabel = 'PCHO$_{aer}$ and DCAA$_{aer}$'
+        else:
+            ylabel = labels[i]
+        axes[i].set_ylabel(ylabel,
+                           fontsize=font)
+        axes[i].yaxis.set_tick_params(labelsize=font)
+        axes[i].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        axes[i].xaxis.set_tick_params(labelsize=font)
+        axes[i].set_xlabel("Months",
+                           fontsize=font)
 
-    p21, = ax2.plot(t_ax,
-                    C_emi[1].values,
-                    label='DCAA$_{aer}$',
-                    linewidth=1.5,
-                    color='g')
-    p22, = ax3.plot(t_ax,
-                    C_emi[2].values,
-                    label='PL$_{aer}$',
-                    linewidth=1.5,
-                    color='darkred')
-    p23, = ax4.plot(t_ax,
-                    C_emi[3].values,
-                    label='SS$_{aer}$',
-                    linewidth=1.5,
-                    color='m')
-
-
-    ax.set_ylabel("SIC",
-                  fontsize=font)
-    #    ax.set_ylim(limits[0])
-    ax.yaxis.set_tick_params(labelsize=font)
-
-    ax2.set_ylabel("Emission flux",
-                   fontsize=font)
-    #    ax2.set_ylim(0, 0.015)
-    ax3.set_ylabel("Emission flux PL$_{aer}$",
-                   color='darkred',
-                   fontsize=font)
-    ax4.set_ylabel("Emission flux SS$_{aer}$",
-                   color='m',
-                   fontsize=font)
-    #    ax3.set_ylim(0,0.5)
-
-    # ax.set_ylim(limits[0])
-    ax2.yaxis.set_tick_params(labelsize=font)
-    ax3.yaxis.set_tick_params(labelsize=font)
-
-    #     ax2.yaxis.set_minor_locator(mticker.LogLocator(numticks=999, subs="auto"))
-
-    #     ax2.set_xlabel("Months", fontsize = 16)
-
-    #     ax.legend(loc='upper right', fontsize = font)
-    #     ax2.legend(loc='upper left',  fontsize = font)
-    #     ax3.legend(loc='upper right',  fontsize = font)
-    ax3.spines['right'].set_color('darkred')
-    ax3.tick_params(axis='y',
-                    colors='darkred')
-
-    ax4.spines['right'].set_color('m')
-    ax4.tick_params(axis='y',
-                    colors='m')
+    # ax1.set_ylabel("Emission flux PL$_{aer}$",
+    #                color='darkred',
+    #                fontsize=font)
+    # ax2.set_ylabel("Emission flux SS$_{aer}$",
+    #                color='m',
+    #                fontsize=font)
+    # ax3.spines['right'].set_color('darkred')
+    # ax3.tick_params(axis='y',
+    #                 colors='darkred')
+    #
+    # ax4.spines['right'].set_color('m')
+    # ax4.tick_params(axis='y',
+    #                 colors='m')
 
     fig.legend(loc='upper left',
-               handles=[p3, p31, p32],
+               handles=legend[4:],
                ncol=3,
                fontsize=font,
                bbox_to_anchor=(0.1, 1)
                )
 
     fig.legend(loc='upper right',
-               handles=[p2, p21, p22, p23],
+               handles=legend[:3],
                ncol=2,
                fontsize=font,
                bbox_to_anchor=(0.94, 1))
-
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-
-    ax.xaxis.set_tick_params(labelsize=font)
-
-    ax.set_xlabel("Months",
-                  fontsize=font)
-    ax2.set_xlabel("Months",
-                   fontsize=font)
 
 
 def plot_seasons_reg(ax, C_conc, C_omf, na, c, lw, ylabels, ylims, reg_gray_line=False):
@@ -247,6 +206,7 @@ def get_mean_reg(data_ds):
         reg_data[reg_na] = reg_sel_vals.mean(
             dim=['lat', 'lon'],
             skipna=True)
+    print(reg_data)
     return reg_data
 
 
@@ -283,7 +243,7 @@ def plot_seasonality_region(dict_seasonality):
                                      lims)
 
 
-def plot_seanonality_reg_species(C_ice, title, C_emi, var_id, lims,):
+def plot_seanonality_reg_species(C_ice_all, title, C_emi_all, var_id, lims, ):
     fig, axs = plt.subplots(1, 2,
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
@@ -292,10 +252,10 @@ def plot_seanonality_reg_species(C_ice, title, C_emi, var_id, lims,):
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
                  'brown', 'lightblue', 'y', 'gray']
-    for idx, na in enumerate(C_emi.keys()):
+    for idx, na in enumerate(C_emi_all.keys()):
         print(na)
-        C_emi = C_emi[na]
-        C_ice = C_ice[na]
+        C_emi = C_emi_all[na]
+        C_ice = C_ice_all[na]
         if na == 'Arctic':
             lw = 1.5
         else:
@@ -343,3 +303,4 @@ def plot_seanonality_reg_species(C_ice, title, C_emi, var_id, lims,):
     plt.savefig(f'Multiannual monthly trends poles and subregions_color_reg_ice_{var_id}.png',
                 dpi=300,
                 bbox_inches="tight")
+    plt.close()
