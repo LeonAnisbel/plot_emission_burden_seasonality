@@ -84,9 +84,8 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                bbox_to_anchor=(0.94, 1))
 
 
-def plot_seasons_reg(ax, C_conc, C_omf, na, c, lw, ylabels, ylims, reg_gray_line=False):
+def plot_seasons_reg(ax, C_conc, na, c, lw, ylabels, reg_gray_line=False, botton_label=True):
     t_ax = C_conc.time
-    ax, ax2 = ax[0], ax[1]
     if na != 'Arctic':
         line_sty = '--'
     else:
@@ -99,11 +98,6 @@ def plot_seasons_reg(ax, C_conc, C_omf, na, c, lw, ylabels, ylims, reg_gray_line
                      color=c,
                      label='Arctic',
                      linewidth=lw)
-        p3 = ax2.plot(t_ax,
-                      C_omf,
-                      color=c,
-                      label='Arctic',
-                      linewidth=lw)
 
     else:
         p2, = ax.plot(t_ax, C_conc,
@@ -111,46 +105,31 @@ def plot_seasons_reg(ax, C_conc, C_omf, na, c, lw, ylabels, ylims, reg_gray_line
                       label=na,
                       color=c,
                       linestyle=line_sty)  # linestyle = li_style,
-        p3, = ax2.plot(t_ax, C_omf,
-                       linewidth=lw,
-                       label=na,
-                       color=c,
-                       linestyle=line_sty)  # linestyle = li_style,
 
     ax.set_ylabel(ylabels[0],
                   fontsize=font)
     # ax.set_ylim(0, ylims[0])
     ax.yaxis.set_tick_params(labelsize=font)
 
-    ax2.set_ylabel(ylabels[1],
-                   fontsize=font)
-    # ax2.set_ylim(0, ylims[1])
-    ax2.yaxis.set_tick_params(labelsize=font)
-
     def format_func(value, tick_number):
         N = int(value + 1)
         return N
 
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-
-    ax.xaxis.set_tick_params(labelsize=font)
-
-    ax.set_xlabel("Months",
-                  fontsize=font)
-    ax2.set_xlabel("Months",
-                   fontsize=font)
+    if botton_label:
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        ax.xaxis.set_tick_params(labelsize=font)
+        ax.set_xlabel("Months",
+                      fontsize=font)
 
     if na == 'Arctic' and reg_gray_line:
         print('here')
         ax.legend(loc='upper left',
                   fontsize=14)
-        ax2.legend(loc='upper left',
-                   fontsize=14)
 
     if reg_gray_line:
         pass
     else:
-        return p2, p3
+        return p2
 
 
 def get_mean(da):
@@ -211,40 +190,38 @@ def get_mean_reg(data_ds):
 
 
 def plot_seasonality_region(dict_seasonality):
-    emi_means = [get_mean_reg(dict_seasonality['emi']['seasonality']['emi_POL'] * fac),
-                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_PRO'] * fac),
-                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * fac),
-                 get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * fac)]
+    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * fac)
+    emi_pol_pro = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_POL'] * fac) + get_mean_reg(
+        dict_seasonality['emi']['seasonality']['emi_PRO'] * fac)
+    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * fac)
     print('finished computing means emi')
 
-    var_ids = ['PCHO', 'DCAA', 'PL', 'SS']
+    var_ids = ['Emission of PCHO + DCAA \n ($ng\ s^{-1}$)',
+               'Emission of PL \n ($ng\ s^{-1}$)',
+               'Emission of SS \n ($ng\ s^{-1}$)',
+               'Wind 10m \n (${m\ s^{-1}}$)',
+               'SIC (%)',
+               'SST (${C^{o}}$)']
 
     seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'])
     sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16)
     wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'])
 
-    atmo_vars = [seaice_mean,
-                 sst_mean,
+    variables = [emi_ss,
+                 emi_pol_pro,
+                 emi_lip,
                  wind_mean,
-                 wind_mean]
-    atmos_var_title = ['SIC',
-                       'SSt',
-                       'Wind 10m',
-                       'Wind 10m']
+                 seaice_mean,
+                 sst_mean]
 
     print('finished computing means')
 
-    lims = []
-    for i in range(len(emi_means)):
-        plot_seanonality_reg_species(atmo_vars[i],
-                                     atmos_var_title[i],
-                                     emi_means[i],
-                                     var_ids[i],
-                                     lims)
+    plot_seanonality_reg_species(variables,
+                                 var_ids)
 
 
-def plot_seanonality_reg_species(C_ice_all, title, C_emi_all, var_id, lims, ):
-    fig, axs = plt.subplots(1, 2,
+def plot_seanonality_reg_species(variables, ylabels):
+    fig, axs = plt.subplots(2, 3,
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
 
@@ -252,30 +229,30 @@ def plot_seanonality_reg_species(C_ice_all, title, C_emi_all, var_id, lims, ):
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
                  'brown', 'lightblue', 'y', 'gray']
-    for idx, na in enumerate(C_emi_all.keys()):
+    xlabel = False
+    for idx, na in enumerate(variables.keys()):
         print(na)
-        C_emi = C_emi_all[na]
-        C_ice = C_ice_all[na]
+        C_var = variables[na]
         if na == 'Arctic':
             lw = 1.5
         else:
             lw = 1.5
 
-        ylabels = [f'Emission flux of {var_id}',
-                   title]
-
-        p2, p3 = plot_seasons_reg(axs,
-                                  C_emi,
-                                  C_ice,
+        for i in range(len(C_var)):
+            if i > 2:
+                xlabel = True
+            p2 = plot_seasons_reg(axs[i],
+                                  C_var[i],
                                   na,
                                   color_reg[idx],
                                   lw,
-                                  ylabels,
-                                  lims)
+                                  ylabels[i],
+                                  botton_label=xlabel)
         leg_list.append(p2)
 
-    titles = [r'$\bf{(a)}$',
-              r'$\bf{(b)}$']
+    titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
+              r'$\bf{(c)}$', r'$\bf{(d)}',
+              r'$\bf{(e)}$', r'$\bf{(f)},']
     for i, axs in enumerate(ax):
         axs.set_title(titles[i],
                       loc='right',
@@ -290,9 +267,9 @@ def plot_seanonality_reg_species(C_ice_all, title, C_emi_all, var_id, lims, ):
 
         axs.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
-    box = ax[0].get_position()
-    ax[0].set_position([box.x0, box.y0 + box.height * 0.1,
-                        box.width, box.height * 0.9])
+    box = ax[-3].get_position()
+    ax[-3].set_position([box.x0, box.y0 + box.height * 0.1,
+                         box.width, box.height * 0.9])
     fig.legend(handles=leg_list,
                ncol=3,
                bbox_to_anchor=(0.5, 0.),
@@ -300,7 +277,7 @@ def plot_seanonality_reg_species(C_ice_all, title, C_emi_all, var_id, lims, ):
                fontsize=font)
     fig.tight_layout()
 
-    plt.savefig(f'Multiannual monthly trends poles and subregions_color_reg_ice_{var_id}.png',
+    plt.savefig(f'Multiannual monthly trends poles and subregions_color_emission_and_sic_sst.png',
                 dpi=300,
                 bbox_inches="tight")
     plt.close()
