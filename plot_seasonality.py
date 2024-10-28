@@ -190,10 +190,12 @@ def get_mean_reg(data_ds):
 
 
 def plot_seasonality_region(dict_seasonality):
-    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * fac)
-    emi_pol_pro = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_POL'] * fac) + get_mean_reg(
-        dict_seasonality['emi']['seasonality']['emi_PRO'] * fac)
-    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * fac)
+    gboxarea = dict_seasonality['emi']['seasonality']['gboxarea']
+    factor = fac * gboxarea
+    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * factor)
+    emi_pol_pro = get_mean_reg((dict_seasonality['emi']['seasonality']['emi_POL'] +
+                                dict_seasonality['emi']['seasonality']['emi_PRO']) * factor)
+    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * factor)
     print('finished computing means emi')
 
     var_ids = ['Emission of PCHO + DCAA \n ($ng\ s^{-1}$)',

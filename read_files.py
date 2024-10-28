@@ -3,6 +3,7 @@ import xarray as xr
 import glob
 import numpy as np
 
+
 def read_tot_moa_emi_burden(thirty_yrs=False):
     data_dir = global_vars.project_dir
     print(data_dir)
@@ -32,7 +33,7 @@ def read_wind_prec_emi_ss(thirty_yrs=False):
     if thirty_yrs:
         f_id = global_vars.files_id_30yr
 
-# correct to velo10m ###############
+    # correct to velo10m ###############
     wind = xr.open_dataset(data_dir + 'wind10_echam' + f_id)['wind10']
     precip = xr.open_dataset(data_dir + 'aprl_echam' + f_id)['aprl'] * 1e6  # factor to convert kg to mg
     emi_ss = xr.open_dataset(data_dir + 'emi_SS_emi' + f_id)['emi_SS']
@@ -52,7 +53,6 @@ def sel_time(C, month):
 
 
 def sel_var_season(ds, season, months, isice=False):
-
     ds_season = sel_time(ds, months)
     # tot_emi = (emi_ds_season['emi_POL'] +
     #            emi_ds_season['emi_PRO'] +
@@ -76,23 +76,20 @@ def read_emi_ice_files(sum_mo, win_mo, file_type1, emi_var, file_type2, atm_var,
     files1 = glob.glob(mod_dir + exp + f'*01_{file_type1}.nc')
     files2 = glob.glob(mod_dir + exp + f'*01_{file_type2}.nc')
 
-    
     files_filter_1 = []
     files_filter_2 = []
 
-#    for ff1,ff2 in zip(files1, files2):
- #       if int(ff1[58:62]) > 2008:
-  #          
-   #         files_filter_1.append(ff1)
+    #    for ff1,ff2 in zip(files1, files2):
+    #       if int(ff1[58:62]) > 2008:
+    #
+    #         files_filter_1.append(ff1)
     #    if int(ff2[58:62]) > 2008:
-     #       files_filter_2.append(ff2)
-    
+    #       files_filter_2.append(ff2)
+
     files_filter_2 = files2
-    files_filter_1=files1
-    files_filter_2.sort()    
+    files_filter_1 = files1
+    files_filter_2.sort()
     files_filter_1.sort()
-    
-    
 
     emi_ds = xr.open_mfdataset(files_filter_1,
                                concat_dim='time',
@@ -118,16 +115,14 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
 
- 
     var_ds_month = []
     for m in month:
         if m <= 9:
-            m = '0'+str(m)
+            m = '0' + str(m)
         else:
             m = str(m)
 
         files = glob.glob(mod_dir + exp + f'*{m}.01_{file_type}.nc')
-   
 
         ds = xr.open_mfdataset(files,
                                concat_dim='time',
@@ -135,23 +130,24 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
                                preprocess=lambda ds:
                                ds[var])
         var_ds_month.append(
-                ds.where(ds.lat>63, drop=True).mean(dim='time', skipna=True))
-    var_ds = xr.concat(var_ds_month, dim = 'time')
+            ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
+    var_ds = xr.concat(var_ds_month, dim='time')
     return var_ds
 
 
 def read_vars_per_months():
-    months = np.arange(1,13)
-    vars_file_type = {'emi':{'var':['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS'],},
-            'echam': {'var':['seaice', 'tsw']},
-            'vphysc': {'var':['velo10m']},
-            }
+    months = np.arange(1, 13)
+    vars_file_type = {'emi': {'var': ['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS', 'gboxarea']},
+                      'echam': {'var': ['seaice', 'tsw']},
+                      'vphysc': {'var': ['velo10m']},
+                      }
+
     for file_type in vars_file_type.keys():
-        ds = read_individual_month(vars_file_type[file_type]['var'], 
-                file_type, 
-                months, 
-                0)
-        vars_file_type[file_type]['seasonality']= ds
+        ds = read_individual_month(vars_file_type[file_type]['var'],
+                                   file_type,
+                                   months,
+                                   0)
+        vars_file_type[file_type]['seasonality'] = ds
 
     return vars_file_type
 
@@ -159,42 +155,42 @@ def read_vars_per_months():
 def read_vars_per_seasons(sum_month, win_month):
     omf_summer, omf_winter, wind_summer, wind_winter = (
         read_emi_ice_files(sum_month, win_month,
-            'ham',
-            ['OMF_POL', 'OMF_PRO', 'OMF_LIP'],
-            'vphysc',
-            'velo10m',
-            0,
-            isice=False))
+                           'ham',
+                           ['OMF_POL', 'OMF_PRO', 'OMF_LIP'],
+                           'vphysc',
+                           'velo10m',
+                           0,
+                           isice=False))
 
     omf_tot_summer = (omf_summer['OMF_LIP'])
     omf_tot_winter = (omf_winter['OMF_LIP'])
 
     ss_summer, ss_winter, sst_summer, sst_winter = (
         read_emi_ice_files(sum_month, win_month,
-            'emi',
-            ['emi_SS'],
-            'echam',
-            'tsw',
-            0,
-            isice=False))
+                           'emi',
+                           ['emi_SS'],
+                           'echam',
+                           'tsw',
+                           0,
+                           isice=False))
 
     emi_summer, emi_winter, ice_summer, ice_winter = (
         read_emi_ice_files(sum_month, win_month,
-            'emi',
-            ['emi_POL', 'emi_PRO', 'emi_LIP'],
-            'echam',
-            'seaice',
-            0,
-            isice=True))
+                           'emi',
+                           ['emi_POL', 'emi_PRO', 'emi_LIP'],
+                           'echam',
+                           'seaice',
+                           0,
+                           isice=True))
 
     burden_summer, burden_winter, ice_summer, ice_winter = (
         read_emi_ice_files(sum_month, win_month,
-            'burden',
-            ['burden_POL', 'burden_PRO', 'burden_LIP'],
-            'echam',
-            'seaice',
-            0,
-            isice=True))
+                           'burden',
+                           ['burden_POL', 'burden_PRO', 'burden_LIP'],
+                           'echam',
+                           'seaice',
+                           0,
+                           isice=True))
 
     return ([omf_tot_summer, omf_tot_winter],
             [wind_summer, wind_winter],
