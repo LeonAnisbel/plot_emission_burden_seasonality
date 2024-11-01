@@ -35,24 +35,24 @@ omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, ice = read_files.read_vars_per_
 #print(sum_month, win_month)
 fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 
-plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
-                                        emi_ss[0]['emi_SS']*fac/1e3,
-                                        wind[0]['velo10m'],
-                                        sst[0]['tsw'] - 273],
-                                       ice[0],
-                                       'OMF_ss_emi_wind_sst_late',
-                                       'wind')
-print('start plot')
-fac_mg = global_vars.factor_kg_to_mg  # factor to convert kg to mg
-plot_maps.plot_emi_season(burden_moa[0] * fac_mg,
-                          burden_moa[1] * fac_mg,
-                          ice[0],
-                          ice[1],
-                          'burden',
-                          'Surface burden late',
-                          'MOA')
+# plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
+#                                         emi_ss[0]['emi_SS']*fac/1e3,
+#                                         wind[0]['velo10m'],
+#                                         sst[0]['tsw'] - 273],
+#                                        ice[0],
+#                                        'OMF_ss_emi_wind_sst_late',
+#                                        'wind')
+# print('start plot')
+# fac_mg = global_vars.factor_kg_to_mg  # factor to convert kg to mg
+# plot_maps.plot_emi_season(burden_moa[0] * fac_mg,
+#                           burden_moa[1] * fac_mg,
+#                           ice[0],
+#                           ice[1],
+#                           'burden',
+#                           'Surface burden late',
+#                           'MOA')
 print('finished plot')
-exit()
+# exit()
 plot_maps.plot_emi_season(emi_moa[0] * fac,
                           emi_moa[1] * fac,
                           ice[0],

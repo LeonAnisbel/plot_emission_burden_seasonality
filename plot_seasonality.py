@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import xarray as xr
 import global_vars
 from utils import get_var_reg, regions, get_conds
 
@@ -106,7 +106,7 @@ def plot_seasons_reg(ax, C_conc, na, c, lw, ylabels, reg_gray_line=False, botton
                       color=c,
                       linestyle=line_sty)  # linestyle = li_style,
 
-    ax.set_ylabel(ylabels[0],
+    ax.set_ylabel(ylabels,
                   fontsize=font)
     # ax.set_ylim(0, ylims[0])
     ax.yaxis.set_tick_params(labelsize=font)
@@ -154,7 +154,6 @@ def plot_all_seasonality(dict_seasonality):
     wind = get_mean(dict_seasonality['vphysc']['seasonality']['velo10m'])
 
     print('finished computing means')
-    print(seaice_mean, sst_mean)
     plot_monthly_series_pannel(ax, fig,
                                [emi_pol_mean,
                                 emi_pro_mean,
@@ -175,48 +174,57 @@ def plot_all_seasonality(dict_seasonality):
                 bbox_inches="tight")
 
 
-def get_mean_reg(data_ds):
+def get_mean_reg(data_ds, var_na):
     reg_data = regions()
     for idx, reg_na in enumerate(list(reg_data.keys())):
         conditions = get_conds(data_ds.lat,
                                data_ds.lon)
-        reg_sel_vals = get_var_reg(data_ds,
-                                   conditions[idx])
+        if reg_na == 'Greenland & Norwegian Sea':
+            v_subcond = []
+            for subcond in conditions[idx]:
+                v_subcond.append(get_var_reg(data_ds, subcond))
+            reg_sel_vals = xr.concat(v_subcond,
+                                     dim='lon')
+        else:
+            reg_sel_vals = get_var_reg(data_ds,
+                                       conditions[idx])
+
         reg_data[reg_na] = reg_sel_vals.mean(
-            dim=['lat', 'lon'],
-            skipna=True)
-    print(reg_data)
+                            dim=['lat', 'lon'],
+                            skipna=True)
+        # print(var_na, reg_na,
+        #       'max value  ', reg_data[reg_na].max().values,
+        #       'min value  ', reg_data[reg_na].min().values)
+
     return reg_data
 
 
 def plot_seasonality_region(dict_seasonality):
     gboxarea = dict_seasonality['emi']['seasonality']['gboxarea']
-    factor = fac * gboxarea
-    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * factor)
+    factor = 1e-9 * 31557600 * gboxarea  # convert to units ofd Tg/yr
+    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * factor, 'emi_SS ')
     emi_pol_pro = get_mean_reg((dict_seasonality['emi']['seasonality']['emi_POL'] +
-                                dict_seasonality['emi']['seasonality']['emi_PRO']) * factor)
-    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * factor)
-    print('finished computing means emi')
+                                dict_seasonality['emi']['seasonality']['emi_PRO']) * factor, 'emi_POL + PRO ')
+    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * factor, 'emi_LIP ')
 
-    var_ids = ['Emission of PCHO + DCAA \n ($ng\ s^{-1}$)',
-               'Emission of PL \n ($ng\ s^{-1}$)',
-               'Emission of SS \n ($ng\ s^{-1}$)',
-               'Wind 10m \n (${m\ s^{-1}}$)',
+    seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'] * 100, 'SIC ')
+    sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16, 'SST ')
+    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], 'Wind 10m ')
+
+    var_ids = ['Wind 10m \n (${m\ s^{-1}}$)',
                'SIC (%)',
-               'SST (${C^{o}}$)']
-
-    seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'])
-    sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16)
-    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'])
-
-    variables = [emi_ss,
+               'SST (${C^{o}}$)',
+               'Emission of SS \n ($Tg\ y^{-1}$)',
+               'Emission of \n PCHO + DCAA ($Tg\ y^{-1}$)',
+               'Emission of PL \n ($Tg\ y^{-1}$)',
+               ]
+    variables = [wind_mean,
+                 seaice_mean,
+                 sst_mean,
+                 emi_ss,
                  emi_pol_pro,
                  emi_lip,
-                 wind_mean,
-                 seaice_mean,
-                 sst_mean]
-
-    print('finished computing means')
+                 ]
 
     plot_seanonality_reg_species(variables,
                                  var_ids)
@@ -227,34 +235,34 @@ def plot_seanonality_reg_species(variables, ylabels):
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
 
-    leg_list = []
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
                  'brown', 'lightblue', 'y', 'gray']
-    xlabel = False
-    for idx, na in enumerate(variables.keys()):
-        print(na)
-        C_var = variables[na]
-        if na == 'Arctic':
-            lw = 1.5
-        else:
-            lw = 1.5
+    xaxislabel = False
+    for i in range(len(variables)):
+        leg_list = []
+        C_var = variables[i]
+        if i > 2:
+            xaxislabel = True
+        for idx, na in enumerate(list(C_var.keys())):
+            print(na)
+            if na == 'Arctic':
+                lw = 1.5
+            else:
+                lw = 1.5
 
-        for i in range(len(C_var)):
-            if i > 2:
-                xlabel = True
-            p2 = plot_seasons_reg(axs[i],
-                                  C_var[i],
+            p2 = plot_seasons_reg(ax[i],
+                                  C_var[na],
                                   na,
                                   color_reg[idx],
                                   lw,
                                   ylabels[i],
-                                  botton_label=xlabel)
-        leg_list.append(p2)
+                                  botton_label=xaxislabel)
+            leg_list.append(p2)
 
     titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
-              r'$\bf{(c)}$', r'$\bf{(d)}',
-              r'$\bf{(e)}$', r'$\bf{(f)},']
+              r'$\bf{(c)}$', r'$\bf{(d)}$',
+              r'$\bf{(e)}$', r'$\bf{(f)}$']
     for i, axs in enumerate(ax):
         axs.set_title(titles[i],
                       loc='right',
