@@ -15,15 +15,13 @@ def read_tot_moa_emi_burden(thirty_yrs=False):
     emi_po = xr.open_dataset(data_dir + 'emi_POL_emi' + f_id)['emi_POL']
     emi_pr = xr.open_dataset(data_dir + 'emi_PRO_emi' + f_id)['emi_PRO']
 
-    print(data_dir + 'burden_LIP_burden' + f_id)
     burden_li = xr.open_dataset(data_dir + 'burden_LIP_burden' + f_id)['burden_LIP']
     burden_po = xr.open_dataset(data_dir + 'burden_POL_burden' + f_id)['burden_POL']
     burden_pr = xr.open_dataset(data_dir + 'burden_PRO_burden' + f_id)['burden_PRO']
 
-    print(burden_li, emi_li)
     emi_tot = (emi_li + emi_po + emi_pr) * 1e3  # factor to convert ug to ng
     burden_tot = burden_li + burden_pr + burden_po
-    print(burden_tot)
+
     return emi_tot.isel(time=0), burden_tot.isel(time=0)
 
 

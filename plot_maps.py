@@ -10,6 +10,7 @@ import matplotlib.path as mpath
 from matplotlib import ticker as mticker
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import cartopy.feature as cfeature
+import matplotlib.colors as mplcolors
 
 
 def create_fig(h, w):
@@ -17,7 +18,6 @@ def create_fig(h, w):
 
 
 def customize_axis(ax, titles, polar_proj):
-
     if polar_proj:
         font = '20'
         theta = np.linspace(0, 2 * np.pi, 100)
@@ -28,8 +28,8 @@ def customize_axis(ax, titles, polar_proj):
 
         gl = ax.gridlines(draw_labels=True, )
         ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land',
-                                                      '10m', edgecolor='black',
-                                                      facecolor='oldlace'))
+                                                    '10m', edgecolor='black',
+                                                    facecolor='oldlace'))
         ax.coastlines()
         gl.ylocator = mticker.FixedLocator([65, 75, 85])
         gl.yformatter = LATITUDE_FORMATTER
@@ -47,13 +47,15 @@ def customize_axis(ax, titles, polar_proj):
         gl.left_labels = False
 
         ax.coastlines()
-        ax.add_feature(cartopy.feature.NaturalEarthFeature('physical',
-                                                           'land', '110m',
-                                                           edgecolor='black',
-                                                           facecolor='oldlace'))  # lightgray
+        if titles[0] != 'Total burden' and titles[0] != 'Surface emission flux':
+            ax.add_feature(cartopy.feature.NaturalEarthFeature('physical',
+                                                               'land', '110m',
+                                                               edgecolor='black',
+                                                               facecolor='oldlace'))  # lightgray
 
     ax.set_title(titles[0], loc='right', fontsize=font)
     ax.set_title(titles[1], loc='left', fontsize=font)
+
 
 def add_ice_colorbar(fig, ic):
     cbar_ax = fig.add_axes([0.37, -0.05, 0.25, 0.03])
@@ -66,28 +68,27 @@ def add_ice_colorbar(fig, ic):
 def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
     if polar_proj:
         axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
-                            subplot_kw={'projection': ccrs.NorthPolarStereo()})
+                               subplot_kw={'projection': ccrs.NorthPolarStereo()})
         axes.set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
 
     else:
         axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
                                subplot_kw={'projection': ccrs.Robinson()})
 
-    #     for i,ax in enumerate(axes):
     orig_cmap = plt.get_cmap(colorb)
     colors = orig_cmap(np.linspace(0.1, 1, 14))
     cmap = mcolors.LinearSegmentedColormap.from_list("mycmap", colors)
-    # 11 discrete colorsYlGnBu
+
     im = axes.pcolormesh(moa.lon, moa.lat, moa,
                          cmap=cmap, transform=ccrs.PlateCarree(),
                          vmin=vm[0], vmax=vm[1])
+    # im = axes.pcolormesh(moa.lon, moa.lat, moa,
+    #                      norm=mplcolors.LogNorm(vmin=float(moa.min().values), vmax=float(moa.max().values)),
+    #                      cmap=colorb, transform=ccrs.PlateCarree(),)
 
-    #     cbar_ax = subfig.add_axes([0.1, -0.05, 0.8, 0.03])
     cbar = subfig.colorbar(im, orientation="horizontal", extend='max')  # ,cax = cbar_ax
     cbar.ax.tick_params(labelsize=12)
     cbar.set_label(label=unit, fontsize=12, weight='bold')
-    #     ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-    #                   linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
     customize_axis(axes, titles, polar_proj=polar_proj)
 
@@ -106,8 +107,7 @@ def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False):
     colorb = global_vars.colorbar[var]
     if polar_proj:
         title = f'arctic_emiss_burden_{var}.png'
-        vm = [[0, 1.2],[0, 0.005]] 
-
+        vm = [[0, 1.2], [0, 0.005]]
 
     for idx, subf in enumerate(subfigs):
         each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
@@ -125,6 +125,7 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
     units = global_vars.unit[var_id]
     vm = global_vars.vmax[var_id]
     colorb = global_vars.colorbar[var_id]
+
     for idx, subf in enumerate(subfigs):
         each_fig(subf, var[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
     plt.savefig(global_vars.plot_dir + f'{fig_na}{var_id}.png', dpi=300, bbox_inches="tight")
@@ -132,7 +133,7 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
 
 def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False, polar_proj=True):
     axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
-                            subplot_kw={'projection': ccrs.NorthPolarStereo()})
+                           subplot_kw={'projection': ccrs.NorthPolarStereo()})
     axes.set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
 
     #     for i,ax in enumerate(axes):
@@ -148,20 +149,19 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False
     #     ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
     #                   linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
-    ic = axes.contourf(ice.lon, 
-            ice.lat, 
-            ice, 
-            np.arange(10, 110, 30), #levels=5, 
-            cmap='Greys_r',
-            transform=ccrs.PlateCarree())
-
+    ic = axes.contourf(ice.lon,
+                       ice.lat,
+                       ice,
+                       np.arange(10, 110, 30),  # levels=5,
+                       cmap='Greys_r',
+                       transform=ccrs.PlateCarree())
 
     customize_axis(axes, titles, polar_proj=polar_proj)
     return ic
 
 
 def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_id, title, var):
-    fig = create_fig(14, 10)  #layout='constrained',constrained_layout=True
+    fig = create_fig(14, 10)  # layout='constrained',constrained_layout=True
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6) = fig.subfigures(nrows=2,
                                                                               ncols=3,
@@ -174,7 +174,7 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
     moa_winter = [moa_emi_winter[f'{var_id}_POL'], moa_emi_winter[f'{var_id}_PRO'], moa_emi_winter[f'{var_id}_LIP']]
 
     print('summer', moa_summer[0].max().values, moa_summer[1].max().values, moa_summer[2].max().values)
-    print('winter', moa_winter[0].max().values, moa_winter[1].max().values,moa_winter[2].max().values)
+    print('winter', moa_winter[0].max().values, moa_winter[1].max().values, moa_winter[2].max().values)
     names_winter = [[r'PCHO$_{aer}$', r'$\bf{(a)}$'], [r'DCAA$_{aer}$', r'$\bf{(b)}$'], [r'PL$_{aer}$', r'$\bf{(c)}$']]
     names_summer = [['PCHO$_{aer}$', r'$\bf{(d)}$'], ['DCAA$_{aer}$', r'$\bf{(e)}$'], ['PL$_{aer}$', r'$\bf{(f)}$']]
     units = global_vars.unit_arctic[var][var_id][0]
@@ -210,7 +210,7 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
 
 
 def plot_omf_emi_wind_sst_season(variables, ice, title, var_id):
-    fig = create_fig(10, 10)  #layout='constrained'
+    fig = create_fig(10, 10)  # layout='constrained'
 
     (subfig1, subfig2), (subfig3, subfig4) = fig.subfigures(nrows=2, ncols=2,
                                                             wspace=0.07, )
