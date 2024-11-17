@@ -192,6 +192,7 @@ def get_mean_reg(data_ds, var_na):
         reg_data[reg_na] = reg_sel_vals.mean(
                             dim=['lat', 'lon'],
                             skipna=True)
+
         # print(var_na, reg_na,
         #       'max value  ', reg_data[reg_na].max().values,
         #       'min value  ', reg_data[reg_na].min().values)
@@ -200,12 +201,11 @@ def get_mean_reg(data_ds, var_na):
 
 
 def plot_seasonality_region(dict_seasonality):
-    gboxarea = dict_seasonality['emi']['seasonality']['gboxarea']
-    factor = 1e-9 * 31557600 * gboxarea  # convert to units ofd Tg/yr
-    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'] * factor, 'emi_SS ')
+
+    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'], 'emi_SS ')
     emi_pol_pro = get_mean_reg((dict_seasonality['emi']['seasonality']['emi_POL'] +
-                                dict_seasonality['emi']['seasonality']['emi_PRO']) * factor, 'emi_POL + PRO ')
-    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'] * factor, 'emi_LIP ')
+                                dict_seasonality['emi']['seasonality']['emi_PRO']), 'emi_POL + PRO ')
+    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'], 'emi_LIP ')
 
     seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'] * 100, 'SIC ')
     sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16, 'SST ')
@@ -214,9 +214,9 @@ def plot_seasonality_region(dict_seasonality):
     var_ids = ['Wind 10m \n (${m\ s^{-1}}$)',
                'SIC (%)',
                'SST (${C^{o}}$)',
-               'Emission of SS \n ($Tg\ y^{-1}$)',
-               'Emission of \n PCHO + DCAA ($Tg\ y^{-1}$)',
-               'Emission of PL \n ($Tg\ y^{-1}$)',
+               'Emission of SS \n ($Tg\ month^{-1}$)',
+               'Emission of \n PCHO + DCAA ($Tg\ month^{-1}$)',
+               'Emission of PL \n ($Tg\ month^{-1}$)',
                ]
     variables = [wind_mean,
                  seaice_mean,

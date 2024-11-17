@@ -108,6 +108,13 @@ def read_emi_ice_files(sum_mo, win_mo, file_type1, emi_var, file_type2, atm_var,
 
     return emi_ds_summer, emi_ds_winter, ice_ds_summer, ice_ds_winter
 
+def read_nc_file(files, var):
+    ds = xr.open_mfdataset(files,
+                           concat_dim='time',
+                           combine='nested',
+                           preprocess=lambda ds:
+                           ds[var])
+    return ds
 
 def read_individual_month(var, file_type, month, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
@@ -122,13 +129,19 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
 
         files = glob.glob(mod_dir + exp + f'*{m}.01_{file_type}.nc')
 
-        ds = xr.open_mfdataset(files,
-                               concat_dim='time',
-                               combine='nested',
-                               preprocess=lambda ds:
-                               ds[var])
-        var_ds_month.append(
-            ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
+        ds = read_nc_file(files, var)
+
+        if var[:3] == 'emi':
+            ds_gboxarea = read_nc_file(files, 'gboxarea').rename({'gboxarea': f'{var}'})
+            factor_to_month = 1e-9 * 86400 * ds_gboxarea  # convert to units of Tg/d
+            ds_emi_gboxarea = ds * factor_to_month
+            var_ds_month.append(
+                ds_emi_gboxarea.where(ds.lat > 63, drop=True).sum(dim='time', skipna=True))   # convert to units of
+            # Tg/month by summing up
+        else:
+            var_ds_month.append(
+                ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
+
     var_ds = xr.concat(var_ds_month, dim='time')
     return var_ds
 
