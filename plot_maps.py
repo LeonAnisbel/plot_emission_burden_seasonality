@@ -57,12 +57,19 @@ def customize_axis(ax, titles, polar_proj):
     ax.set_title(titles[1], loc='left', fontsize=font)
 
 
-def add_ice_colorbar(fig, ic):
-    cbar_ax = fig.add_axes([0.37, -0.05, 0.25, 0.03])
-    ic_bar = fig.colorbar(ic, extendfrac='auto', shrink=0.01,
-                          cax=cbar_ax, orientation='horizontal', )
-    ic_bar.set_label('Sea ice concentration (%)', fontsize='18')
-    ic_bar.ax.tick_params(labelsize=18)
+def add_ice_colorbar(fig, ic, plot_ice=True):
+    if plot_ice:
+        cbar_ax = fig.add_axes([0.37, -0.05, 0.25, 0.03])
+        ic_bar = fig.colorbar(ic, extendfrac='auto', shrink=0.01,
+                              cax=cbar_ax, orientation='horizontal', )
+        ic_bar.set_label('Sea ice concentration (%)', fontsize='18')
+        ic_bar.ax.tick_params(labelsize=18)
+    else:
+        handles, _ = ic.legend_elements()
+        plt.legend(handles,
+                   ["sic 10%"],
+                   # loc='lower right',
+                   bbox_to_anchor=(0.75, 6))
 
 
 def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
@@ -131,7 +138,7 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
     plt.savefig(global_vars.plot_dir + f'{fig_na}{var_id}.png', dpi=300, bbox_inches="tight")
 
 
-def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False, polar_proj=True):
+def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False, polar_proj=True, plot_ice=True):
     axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
                            subplot_kw={'projection': ccrs.NorthPolarStereo()})
     axes.set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
@@ -149,18 +156,26 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False
     #     ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
     #                   linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
-    ic = axes.contourf(ice.lon,
-                       ice.lat,
-                       ice,
-                       np.arange(10, 110, 30),  # levels=5,
-                       cmap='Greys_r',
-                       transform=ccrs.PlateCarree())
+    if plot_ice:
+        ic = axes.contourf(ice.lon,
+                           ice.lat,
+                           ice,
+                           np.arange(10, 110, 30),  # levels=5,
+                           cmap='Greys_r',
+                           transform=ccrs.PlateCarree())
+    else:
 
+        ic = axes.contour(ice.lon, ice.lat,
+                         ice, levels=[10],
+                         linestyles=('solid',),
+                          colors='green',
+                          linewidths=1.,
+                         transform=ccrs.PlateCarree())
     customize_axis(axes, titles, polar_proj=polar_proj)
     return ic
 
 
-def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_id, title, var):
+def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_id, title, var, plot_ice=True):
     fig = create_fig(14, 10)  # layout='constrained',constrained_layout=True
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6) = fig.subfigures(nrows=2,
@@ -188,7 +203,8 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
                              vm[idx],
                              'jet',
                              0.7,
-                             lower=True)
+                             lower=True,
+                             plot_ice=plot_ice)
 
     for idx, subf in enumerate(subfigs_winter):
         ic = each_fig_season(subf,
@@ -198,9 +214,10 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
                              units,
                              vm[idx],
                              'jet',
-                             0.7)
+                             0.7,
+                             plot_ice=plot_ice)
 
-    add_ice_colorbar(fig, ic)
+    add_ice_colorbar(fig, ic, plot_ice=plot_ice)
 
     # labels = np.arange(20, 100, 15)
     # ic_bar.set_ticklabels(labels)

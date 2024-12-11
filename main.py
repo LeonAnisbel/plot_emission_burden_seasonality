@@ -36,7 +36,7 @@ print('Plot complete emission and Burden')
 print('start with Arctic analysis')
 
 sum_month, win_month = [7, 8, 9], [1, 2, 3]
-omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, ice = read_files.read_vars_per_seasons(sum_month, win_month)
+omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, wdep_moa, ice = read_files.read_vars_per_seasons(sum_month, win_month)
 # print(sum_month, win_month)
 fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 
@@ -58,6 +58,15 @@ fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 #                           'MOA')
 print('finished plot')
 # exit()
+plot_maps.plot_emi_season(wdep_moa[0] * fac,
+                          wdep_moa[1] * fac,
+                          ice[0],
+                          ice[1],
+                          'wdep',
+                          'Surface wdep flux',
+                          'MOA',
+                          plot_ice=False)
+
 plot_maps.plot_emi_season(emi_moa[0] * fac,
                           emi_moa[1] * fac,
                           ice[0],

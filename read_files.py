@@ -203,10 +203,21 @@ def read_vars_per_seasons(sum_month, win_month):
                            0,
                            isice=True))
 
+
+    wdep_summer, wdep_winter, ice_summer, ice_winter = (
+        read_emi_ice_files(sum_month, win_month,
+                           'wetdep',
+                           ['wdep_POL', 'wdep_PRO', 'wdep_LIP'],
+                           'echam',
+                           'seaice',
+                           0,
+                           isice=True))
+
     return ([omf_tot_summer, omf_tot_winter],
             [wind_summer, wind_winter],
             [ss_summer, ss_winter],
             [sst_summer, sst_winter],
             [emi_summer, emi_winter],
             [burden_summer, burden_winter],
+            [wdep_summer, wdep_winter],
             [ice_summer, ice_winter])

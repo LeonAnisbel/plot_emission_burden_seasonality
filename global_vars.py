@@ -21,9 +21,11 @@ colorbar = {'MOA': ['Spectral_r', 'Spectral_r'],
             'SS': ['Spectral_r', 'Spectral_r'],
             'wind': ['Spectral_r', 'Spectral_r', 'jet', 'rainbow']}
 vmax_arctic = {'MOA': {'emi': [0.04, 0.2, 1.7],
+                        'wdep': [0.02, 0.1, 1.2],
                        'burden': [0.001, 0.01, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}
 unit_arctic = {'MOA': {'emi': ['${{\mu}g\ m^{-2}\ s^{-1}}$'],
+                       'wdep': ['${{\mu}g\ m^{-2}\ s^{-1}}$'],
                        'burden': ['$mg\ m^{-2}$']},
                'wind': ['   ', '${{\mu}g\ m^{-2}\ s^{-1}}$',
                         'm/s', '$^{o}C$']}
