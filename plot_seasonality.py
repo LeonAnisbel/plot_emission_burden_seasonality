@@ -1,8 +1,12 @@
+import pickle
+
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 import global_vars
 from utils import get_var_reg, regions, get_conds
+import pandas as pd
+import seaborn as sns
 
 fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 
@@ -48,27 +52,15 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
             ylabel = 'PCHO$_{aer}$ and DCAA$_{aer}$'
         else:
             ylabel = labels[i]
-        axes[i].set_ylabel(ylabel,
-                           fontsize=font)
-        axes[i].yaxis.set_tick_params(labelsize=font)
-        axes[i].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-        axes[i].xaxis.set_tick_params(labelsize=font)
-        axes[i].set_xlabel("Months",
-                           fontsize=font)
 
-    # ax1.set_ylabel("Emission flux PL$_{aer}$",
-    #                color='darkred',
-    #                fontsize=font)
-    # ax2.set_ylabel("Emission flux SS$_{aer}$",
-    #                color='m',
-    #                fontsize=font)
-    # ax3.spines['right'].set_color('darkred')
-    # ax3.tick_params(axis='y',
-    #                 colors='darkred')
-    #
-    # ax4.spines['right'].set_color('m')
-    # ax4.tick_params(axis='y',
-    #                 colors='m')
+    for ax in enumerate(axes):
+        ax.set_ylabel(ylabel,
+                      fontsize=font)
+        ax.yaxis.set_tick_params(labelsize=font)
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        ax.xaxis.set_tick_params(labelsize=font)
+        ax.set_xlabel("Months",
+                           fontsize=font)
 
     fig.legend(loc='upper left',
                handles=legend[4:],
@@ -84,30 +76,19 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                bbox_to_anchor=(0.94, 1))
 
 
-def plot_seasons_reg(ax, C_conc, na, c, lw, ylabels, reg_gray_line=False, botton_label=True):
-    t_ax = C_conc.time
-    if na != 'Arctic':
-        line_sty = '--'
-    else:
-        line_sty = '-'
-
-    #   Plot gray lines only
-    if reg_gray_line:
-        p2 = ax.plot(t_ax,
-                     C_conc,
-                     color=c,
-                     label='Arctic',
-                     linewidth=lw)
-
-    else:
-        p2, = ax.plot(t_ax, C_conc,
-                      linewidth=lw,
-                      label=na,
-                      color=c,
-                      linestyle=line_sty)  # linestyle = li_style,
+def plot_seasons_reg(ax, C_conc, c, mark, ylabels, reg_gray_line=False, botton_label=True):
+    t_ax = C_conc.index
+    print(C_conc)
+    p2 = sns.lineplot(data=C_conc,
+                 palette=c,
+                 linewidth=1.5,
+                 linestyle='dashed',
+                 ax = ax)
 
     ax.set_ylabel(ylabels,
                   fontsize=font)
+    ax.get_legend().remove()
+
     # ax.set_ylim(0, ylims[0])
     ax.yaxis.set_tick_params(labelsize=font)
 
@@ -121,16 +102,7 @@ def plot_seasons_reg(ax, C_conc, na, c, lw, ylabels, reg_gray_line=False, botton
         ax.set_xlabel("Months",
                       fontsize=font)
 
-    if na == 'Arctic' and reg_gray_line:
-        print('here')
-        ax.legend(loc='upper left',
-                  fontsize=14)
-
-    if reg_gray_line:
-        pass
-    else:
-        return p2
-
+    return p2
 
 def get_mean(da):
     da = da.mean(dim=['lat', 'lon'],
@@ -174,7 +146,7 @@ def plot_all_seasonality(dict_seasonality):
                 bbox_inches="tight")
 
 
-def get_mean_reg(data_ds, var_na):
+def get_mean_reg(data_ds):
     reg_data = regions()
     for idx, reg_na in enumerate(list(reg_data.keys())):
         conditions = get_conds(data_ds.lat,
@@ -192,24 +164,44 @@ def get_mean_reg(data_ds, var_na):
         reg_data[reg_na] = reg_sel_vals.mean(
                             dim=['lat', 'lon'],
                             skipna=True)
+    df_reg_data = pd.DataFrame(reg_data)
 
-        # print(var_na, reg_na,
-        #       'max value  ', reg_data[reg_na].max().values,
-        #       'min value  ', reg_data[reg_na].min().values)
+    return df_reg_data
 
-    return reg_data
+def create_pkl_files(data, var_na):
+    with open(f"./pd_files/{var_na}_seasonality.pkl", "wb") as File:
+        pickle.dump(data, File)
 
+def read_pkl_files(var_na):
+    with open(f"./pd_files/{var_na}_seasonality.pkl", "rb") as File:
+        var = pickle.load(File)
+    return var
 
-def plot_seasonality_region(dict_seasonality):
+def seasonality_region_to_pickle_file(dict_seasonality):
+    emi_means_reg = {key: get_mean_reg(value) for key, value in dict_seasonality['emi']['seasonality'].items()}
+    emi_ss = emi_means_reg['emi_SS']
+    emi_lip = emi_means_reg['emi_LIP']
+    emi_pro = emi_means_reg['emi_PRO']
+    emi_pol = emi_means_reg['emi_POL']
+    emi_pol_pro = emi_pro + emi_pol
 
-    emi_ss = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_SS'], 'emi_SS ')
-    emi_pol_pro = get_mean_reg((dict_seasonality['emi']['seasonality']['emi_POL'] +
-                                dict_seasonality['emi']['seasonality']['emi_PRO']), 'emi_POL + PRO ')
-    emi_lip = get_mean_reg(dict_seasonality['emi']['seasonality']['emi_LIP'], 'emi_LIP ')
+    echam_means_reg = {key: get_mean_reg(value) for key, value in dict_seasonality['echam']['seasonality'].items()}
+    seaice_m = echam_means_reg['seaice']
+    seaice_mean = seaice_m*100
+    sst_m = echam_means_reg['tsw']
+    sst_mean = sst_m - 273.16
+    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'])
 
-    seaice_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['seaice'] * 100, 'SIC ')
-    sst_mean = get_mean_reg(dict_seasonality['echam']['seasonality']['tsw'] - 273.16, 'SST ')
-    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], 'Wind 10m ')
+    create_pkl_files(emi_lip, 'emi_LIP')
+    create_pkl_files(emi_pol, 'emi_POL')
+    create_pkl_files(emi_pol_pro, 'emi_POL_PRO')
+    create_pkl_files(emi_pro, 'emi_PRO')
+    create_pkl_files(emi_ss, 'emi_SS')
+    create_pkl_files(seaice_mean, 'seaice')
+    create_pkl_files(sst_mean, 'sst')
+    create_pkl_files(wind_mean, 'veloc10m')
+
+def plot_seasonality_region():
 
     var_ids = ['Wind 10m \n (${m\ s^{-1}}$)',
                'SIC (%)',
@@ -218,9 +210,17 @@ def plot_seasonality_region(dict_seasonality):
                'Emission of \n PCHO + DCAA ($Tg\ month^{-1}$)',
                'Emission of PL \n ($Tg\ month^{-1}$)',
                ]
-    variables = [wind_mean,
-                 seaice_mean,
-                 sst_mean,
+
+    emi_lip = read_pkl_files('emi_LIP')
+    emi_pol_pro = read_pkl_files('emi_POL_PRO')
+    emi_ss = read_pkl_files('emi_SS')
+    seaice = read_pkl_files('seaice')
+    sst = read_pkl_files('sst')
+    wind = read_pkl_files('veloc10m')
+
+    variables = [wind,
+                 seaice,
+                 sst,
                  emi_ss,
                  emi_pol_pro,
                  emi_lip,
@@ -238,27 +238,23 @@ def plot_seanonality_reg_species(variables, ylabels):
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
                  'brown', 'lightblue', 'y', 'gray']
+    mark = ['__' for i in range(len(color_reg)-1)]
+    mark.insert(0, '_')
+
     xaxislabel = False
     for i in range(len(variables)):
         leg_list = []
         C_var = variables[i]
         if i > 2:
             xaxislabel = True
-        for idx, na in enumerate(list(C_var.keys())):
-            print(na)
-            if na == 'Arctic':
-                lw = 1.5
-            else:
-                lw = 1.5
 
-            p2 = plot_seasons_reg(ax[i],
-                                  C_var[na],
-                                  na,
-                                  color_reg[idx],
-                                  lw,
-                                  ylabels[i],
-                                  botton_label=xaxislabel)
-            leg_list.append(p2)
+        p2 = plot_seasons_reg(ax[i],
+                              C_var,
+                              color_reg,
+                              mark,
+                              ylabels[i],
+                              botton_label=xaxislabel)
+        leg_list.append(p2)
 
     titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
               r'$\bf{(c)}$', r'$\bf{(d)}$',
@@ -280,7 +276,11 @@ def plot_seanonality_reg_species(variables, ylabels):
     box = ax[-3].get_position()
     ax[-3].set_position([box.x0, box.y0 + box.height * 0.1,
                          box.width, box.height * 0.9])
-    fig.legend(handles=leg_list,
+
+    handles, labels = ax[-1].get_legend_handles_labels()
+
+    fig.legend(handles=handles,
+               labels= labels,
                ncol=3,
                bbox_to_anchor=(0.5, 0.),
                loc='upper center',
