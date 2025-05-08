@@ -84,35 +84,11 @@ plot_maps.plot_emi_season(emi_moa[0] * fac,
                           'MOA')
 
 
-def get_mean_max_moa(emi_moa, season):
-    print('mean vals', season)
-    print('POL', emi_moa['emi_POL'].where(emi_moa.lat > 63, drop=True).mean(skipna=True).values)
-    print('PRO', emi_moa['emi_PRO'].where(emi_moa.lat > 63, drop=True).mean(skipna=True).values)
-    print('LIP', emi_moa['emi_LIP'].where(emi_moa.lat > 63, drop=True).mean(skipna=True).values)
-    print('max vals', season)
-    print('POL', emi_moa['emi_POL'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
-    print('PRO', emi_moa['emi_PRO'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
-    print('LIP', emi_moa['emi_LIP'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
-    print('  ')
+utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
+utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
 
+utils.get_mean_max_SS_SIC(emi_ss[0] * fac / 1e3, 'emi_SS', 'summer')
+utils.get_mean_max_SS_SIC(emi_ss[1] * fac / 1e3, 'emi_SS', 'winter')
 
-get_mean_max_moa(emi_moa[0] * fac, 'summer')
-get_mean_max_moa(emi_moa[1] * fac, 'winter')
-
-
-def get_mean_max(var, name, season):
-    print('mean vals', season)
-    if name != 'seaice':
-        var = var[name]
-
-    print(name, var.where(var.lat > 63, drop=True).mean(skipna=True).values)
-    print('max vals', season)
-    print(name, var.where(var.lat > 63, drop=True).max(skipna=True).values)
-    print('  ')
-
-
-get_mean_max(emi_ss[0] * fac / 1e3, 'emi_SS', 'summer')
-get_mean_max(emi_ss[1] * fac / 1e3, 'emi_SS', 'winter')
-
-get_mean_max(ice[0], 'seaice', 'summer')
-get_mean_max(ice[1], 'seaice', 'winter')
+utils.get_mean_max_SS_SIC(ice[0], 'seaice', 'summer')
+utils.get_mean_max_SS_SIC(ice[1], 'seaice', 'winter')

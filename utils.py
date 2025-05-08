@@ -1,6 +1,7 @@
 import numpy as np
 import xarray as xr
 import global_vars
+import read_files
 
 
 def find_region(var, cond, dicc, sub_na):
@@ -102,3 +103,43 @@ def get_var_reg(v, cond):
                      (cond[1][0] < cond[1][2]))
                     , drop=True)
     return v
+
+
+def get_lalo_mean_pole(ds, w):
+    ds_pole = ds.where(ds.lat > 63, drop=True)
+    ds_weighted = ds_pole.weighted(w)
+    ds_weighted_mean = ds_weighted.mean(dim='time', skipna=True)
+    return ds_weighted_mean
+
+
+def get_mean_max_moa(emi_moa, season):
+    mod_dir = global_vars.model_output[0]
+    exp = global_vars.experiments[0]
+    gboxarea, weights = read_files.get_weights_pole(mod_dir + exp + f'*201001.01_emi.nc')
+
+    print('mean vals', season)
+    list_vars = [emi_moa['emi_POL'], emi_moa['emi_PRO'], emi_moa['emi_LIP']]
+    for var in list_vars:
+        ds_w_mean = get_lalo_mean_pole(var, weights)
+        print('\n', ds_w_mean.values)
+
+    print('max vals', season)
+    print('POL', emi_moa['emi_POL'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
+    print('PRO', emi_moa['emi_PRO'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
+    print('LIP', emi_moa['emi_LIP'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
+    print('  ')
+
+
+def get_mean_max_SS_SIC(var, name, season):
+    print('mean vals', season)
+    if name != 'seaice':
+        var = var[name]
+
+    mod_dir = global_vars.model_output[0]
+    exp = global_vars.experiments[0]
+    gboxarea, weights = read_files.get_weights_pole(mod_dir + exp + f'*201001.01_emi.nc')
+    ds_w_mean = get_lalo_mean_pole(var, weights)
+    print(name, ds_w_mean.values)
+    print('max vals', season)
+    print(name, var.where(var.lat > 63, drop=True).max(skipna=True).values)
+    print('  ')

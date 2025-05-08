@@ -3,6 +3,8 @@ import xarray as xr
 import glob
 import numpy as np
 
+import utils
+
 
 def read_tot_moa_emi_burden(thirty_yrs=False):
     f_id = global_vars.files_id_10yr
@@ -44,21 +46,14 @@ def read_wind_prec_emi_ss(thirty_yrs=False):
     return emi_ss.isel(time=0), burden_ss.isel(time=0), wind.isel(time=0), precip.isel(time=0),
 
 
-def sel_time(C, month):
-    C_ti = []
-    for m in month:
-        C_ti.append(C.where(C.time.dt.month == m,
-                            drop=True))
-    C_ti_season = xr.concat(C_ti,
-                            dim='time')
-    return C_ti_season
+def sel_time(data, month):
+    da_m = data.where((data.time.dt.month >= month[0]) &
+                      (data.time.dt.month <= month[-1]), drop=True)
+    return da_m
 
 
 def sel_var_season(ds, season, months, isice=False):
     ds_season = sel_time(ds, months)
-    # tot_emi = (emi_ds_season['emi_POL'] +
-    #            emi_ds_season['emi_PRO'] +
-    #            emi_ds_season['emi_LIP'])
     season_mean = ds_season.mean(dim='time',
                                  skipna=True)
 
@@ -120,6 +115,13 @@ def read_nc_file(files, var):
                            ds[var])
     return ds
 
+def get_weights_pole(files):
+    gboxarea = read_nc_file(files, 'gboxarea')
+    gboxarea_pole = gboxarea.where(gboxarea.lat > 63, drop=True)
+    weights = gboxarea_pole['gboxarea'] / gboxarea_pole['gboxarea'].sum(dim=('lat', 'lon'))
+    return gboxarea, weights
+
+
 def read_individual_month(var, file_type, month, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
@@ -135,16 +137,18 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
 
         ds = read_nc_file(files, var)
 
+        gboxarea, weights = get_weights_pole(files)
+
         if var[:3] == 'emi':
-            ds_gboxarea = read_nc_file(files, 'gboxarea').rename({'gboxarea': f'{var}'})
+            ds_gboxarea = gboxarea.rename({'gboxarea': f'{var}'})
             factor_to_month = 1e-9 * 86400 * ds_gboxarea  # convert to units of Tg/d
             ds_emi_gboxarea = ds * factor_to_month
             var_ds_month.append(
                 ds_emi_gboxarea.where(ds.lat > 63, drop=True).sum(dim='time', skipna=True))   # convert to units of
             # Tg/month by summing up
         else:
-            var_ds_month.append(
-                ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
+            ds_w_mean = utils.get_lalo_mean_pole(ds, weights)
+            var_ds_month.append(ds_w_mean)
 
     var_ds = xr.concat(var_ds_month, dim='time')
     return var_ds
