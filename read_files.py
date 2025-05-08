@@ -5,31 +5,35 @@ import numpy as np
 
 
 def read_tot_moa_emi_burden(thirty_yrs=False):
-    data_dir = global_vars.project_dir
-    print(data_dir)
     f_id = global_vars.files_id_10yr
+    data_dir = global_vars.project_dir_glb + '2009_2019/'
     if thirty_yrs:
+        data_dir = global_vars.project_dir_glb + 'conc_1990_2019/'
         f_id = global_vars.files_id_30yr
+    print(data_dir+f_id)
 
-    emi_li = xr.open_dataset(data_dir + 'emi_LIP_emi' + f_id)['emi_LIP']
-    emi_po = xr.open_dataset(data_dir + 'emi_POL_emi' + f_id)['emi_POL']
-    emi_pr = xr.open_dataset(data_dir + 'emi_PRO_emi' + f_id)['emi_PRO']
+    emi_li = xr.open_dataset(data_dir + 'emi_LIP_emi' + f_id + '.nc')['emi_LIP']
+    emi_po = xr.open_dataset(data_dir + 'emi_POL_emi' + f_id + '.nc')['emi_POL']
+    emi_pr = xr.open_dataset(data_dir + 'emi_PRO_emi' + f_id + '.nc')['emi_PRO']
 
-    burden_li = xr.open_dataset(data_dir + 'burden_LIP_burden' + f_id)['burden_LIP']
-    burden_po = xr.open_dataset(data_dir + 'burden_POL_burden' + f_id)['burden_POL']
-    burden_pr = xr.open_dataset(data_dir + 'burden_PRO_burden' + f_id)['burden_PRO']
+    burden_li = xr.open_dataset(data_dir + 'burden_LIP_burden' + f_id + '.nc')['burden_LIP']
+    burden_po = xr.open_dataset(data_dir + 'burden_POL_burden' + f_id + '.nc')['burden_POL']
+    burden_pr = xr.open_dataset(data_dir + 'burden_PRO_burden' + f_id + '.nc')['burden_PRO']
 
     emi_tot = (emi_li + emi_po + emi_pr) * 1e3  # factor to convert ug to ng
     burden_tot = burden_li + burden_pr + burden_po
 
-    return emi_tot.isel(time=0), burden_tot.isel(time=0)
+    conc_POMA = xr.open_dataset(data_dir + 'PMOA_conc' + f_id + '.nc')['PMOA']
+
+
+    return emi_tot.isel(time=0), burden_tot.isel(time=0), conc_POMA.isel(time=0)
 
 
 def read_wind_prec_emi_ss(thirty_yrs=False):
     data_dir = global_vars.project_dir
     f_id = global_vars.files_id_10yr
     if thirty_yrs:
-        f_id = global_vars.files_id_30yr
+        f_id = global_vars.files_id_30yr + '.nc'
 
     # correct to velo10m ###############
     wind = xr.open_dataset(data_dir + 'wind10_echam' + f_id)['wind10']

@@ -1,7 +1,7 @@
 main = '/work/bb1005/b381361/'
 experiments = ['ac3_arctic', 'echam_base']
-main_dir = main + 'echam_postproc/emi_burden_sfc_box_plots/burden/'
-project_dir = main_dir + 'global_emission_burden_2009_2019/'
+main_dir = main + 'echam_postproc/emi_burden_sfc_box_plots/'
+project_dir_glb = main_dir + 'mean_burden_and_emission/global_emission_burden_'
 plot_dir = main_dir + 'plot_emi_burden_maps/plots/'
 
 model_output = [main + 'my_experiments/' + experiments[0] + '/',
@@ -11,9 +11,9 @@ titles = {'MOA': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$
           'SS': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],
           'wind': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$'],
                    ['10 m wind speed', r'$\bf{(c)}$'], ['Large scale precipitation', r'$\bf{(d)}$']]}
-unit = {'MOA': ['${ng\ m^{-2}\ s^{-1}}$', '${mg\ m^{-2}}$'],
-        'SS': ['${{\mu}g\ m^{-2}\ s^{-1}}$', '${mg\ m^{-2}}$'],
-        'wind': ['${{\mu}g\ m^{-2}\ s^{-1}}$', '${mg\ m^{-2}}$', '${m/s}$', '${mg\ m^{-2}\ s^{-1}}$']}
+unit = {'MOA': ['ng m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$'],
+        'SS': ['µg m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$'],
+        'wind': ['µg m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$', '${m/s}$', 'mg m$^{-2}$ s$^{-1}$']}
 vmax = {'MOA': [[0, 3.5], [0, 0.6]],
         'SS': [[0, 0.5], [0, 50]],
         'wind': [[0, 0.5], [0, 50], [0, 15], [0, 50]]}  # 0.1
@@ -24,13 +24,13 @@ vmax_arctic = {'MOA': {'emi': [0.04, 0.2, 1.7],
                         'wdep': [0.02, 0.1, 1.2],
                        'burden': [0.001, 0.01, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}
-unit_arctic = {'MOA': {'emi': ['${{\mu}g\ m^{-2}\ s^{-1}}$'],
-                       'wdep': ['${{\mu}g\ m^{-2}\ s^{-1}}$'],
-                       'burden': ['$mg\ m^{-2}$']},
-               'wind': ['   ', '${{\mu}g\ m^{-2}\ s^{-1}}$',
-                        'm/s', '$^{o}C$']}
+unit_arctic = {'MOA': {'emi': ['µg m$^{-2}$ s$^{-1}}$'],
+                       'wdep': ['µg m$^{-2}$ s$^{-1}}$'],
+                       'burden': ['mg m$^{-2}$']},
+               'wind': ['   ', 'µg m$^{-2}$ s$^{-1}$',
+                        'm/s', '$^{o}$C']}
 factor_kg_to_ng = 1e12
 factor_kg_to_mg = 1e6
 
-files_id_30yr = '_mean_whole_grid_glb_annual_total_1990-2019.nc'
-files_id_10yr = '_mean_whole_grid_glb_annual_total_2009_2019.nc'
+files_id_30yr = '_mean_whole_grid_glb_annual_total_1990_2019'
+files_id_10yr = '_mean_whole_grid_glb_annual_total_2009_2019'

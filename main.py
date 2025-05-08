@@ -1,7 +1,7 @@
 import plot_maps, read_files, global_vars, utils
 import plot_seasonality
 
-thirty_yrs = False  # change to False for 10 yrs mean plot (2009-2019)
+thirty_yrs = True  # change to False for 10 yrs mean plot (2009-2019)
 
 ### Plotting wind speed and
 
@@ -10,12 +10,12 @@ thirty_yrs = False  # change to False for 10 yrs mean plot (2009-2019)
 #                                            'global_wind_prec_emiss_burden_')
 
 # Plotting SS emission and burden
-# emi_tot, burden_tot = read_files.read_ss_emi_burden()
+# emi_tot, burden_tot = read_files.read_ss_emi_burden(thirty_yrs=thirty_yrs)
 # plot_maps.plot_emi_burden_global(emi_tot, burden_tot, 'SS')
 
 # # Plotting MOA emission and burden
 ### To uncomment
-emi_tot, burden_tot = read_files.read_tot_moa_emi_burden(thirty_yrs=thirty_yrs)
+emi_tot, burden_tot, conc_tot = read_files.read_tot_moa_emi_burden(thirty_yrs=thirty_yrs)
 print('Read in emission')
 # utils.calculate_mean_values_oceans(emi_tot)
 
@@ -23,15 +23,23 @@ print('\n Read in burden')
 # utils.calculate_mean_values_oceans(burden_tot)
 
 
-if thirty_yrs:
-    plot_maps.plot_emi_burden_maps(emi_tot.where(emi_tot.lat > 50, drop=True),
-                                   burden_tot.where(burden_tot.lat > 50, drop=True),
-                                   'MOA',
-                                   polar_proj=thirty_yrs)
-else:
-    plot_maps.plot_emi_burden_maps(emi_tot,
-                                   burden_tot,
-                                   'MOA')
+plot_maps.plot_emi_burden_maps_vert_profile(emi_tot,
+                                           burden_tot,
+                                            conc_tot,
+                                           'MOA',
+                                           thirty_yrs=thirty_yrs)
+
+plot_maps.plot_emi_burden_maps(emi_tot.where(emi_tot.lat > 50, drop=True),
+                               burden_tot.where(burden_tot.lat > 50, drop=True),
+                               'MOA',
+                               polar_proj=True,
+                               thirty_yrs=thirty_yrs)
+
+plot_maps.plot_emi_burden_maps(emi_tot,
+                               burden_tot,
+                               'MOA',
+                               thirty_yrs=thirty_yrs)
+
 print('Plot complete emission and Burden')
 print('start with Arctic analysis')
 

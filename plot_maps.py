@@ -95,12 +95,12 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
 
     cbar = subfig.colorbar(im, orientation="horizontal", extend='max')  # ,cax = cbar_ax
     cbar.ax.tick_params(labelsize=12)
-    cbar.set_label(label=unit, fontsize=12, weight='bold')
+    cbar.set_label(label=unit, fontsize=12)
 
     customize_axis(axes, titles, polar_proj=polar_proj)
 
 
-def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False):
+def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=False):
     fig = create_fig(10, 7)
 
     (subfig1, subfig2) = fig.subfigures(nrows=1, ncols=2)
@@ -118,8 +118,61 @@ def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False):
 
     for idx, subf in enumerate(subfigs):
         each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
-    plt.savefig(global_vars.plot_dir + title, dpi=300, bbox_inches="tight")
+
+    if thirty_yrs: yr_name = '30yr_'
+    else: yr_name = '10yr_'
+
+    plt.savefig(global_vars.plot_dir + yr_name + title, dpi=300, bbox_inches="tight")
     #     fig.tight_layout()
+
+
+def plot_emi_burden_maps_vert_profile(moa_emi, moa_burden, moa_conc, var, polar_proj=False, thirty_yrs=False):
+    fig = create_fig(7, 7)
+
+    subfigs = fig.subfigures(nrows=2, ncols=1, height_ratios=[2, 1])
+    (subfig1, subfig2) = subfigs[0].subfigures(nrows=1, ncols=2)
+
+    subfigs0 = [subfig1, subfig2,]
+
+    title = f'global_emiss_burden_{var}.png'
+    moa = [moa_emi, moa_burden]
+    names = global_vars.titles[var]
+    units = global_vars.unit[var]
+    vm = global_vars.vmax[var]
+    colorb = global_vars.colorbar[var]
+    if polar_proj:
+        title = f'arctic_emiss_burden_{var}.png'
+        vm = [[0, 1.2], [0, 0.005]]
+
+    for idx, subf in enumerate(subfigs0):
+        each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
+
+    if thirty_yrs:
+        yr_name = '30yr_'
+    else:
+        yr_name = '10yr_'
+
+    orig_cmap = plt.get_cmap(colorb[0])
+    colors = orig_cmap(np.linspace(0.1, 1, 14))
+    cmap = mcolors.LinearSegmentedColormap.from_list("mycmap", colors)
+    ax = subfigs[-1].subplots(nrows=1, ncols=1)
+
+    moa_conc_lat_cross_section = moa_conc.mean('lon', skipna=True)
+    im = ax.pcolormesh(moa_conc_lat_cross_section.lat.values,
+                       moa_conc_lat_cross_section.lev.values/100,
+                       moa_conc_lat_cross_section,
+                       cmap=cmap)
+    ax.set_xlabel('Latitude ($^{o}$)', fontsize=12)
+    ax.set_ylabel('Pressure (hPa)', fontsize=12)
+    ax.set_ylim([35, None])
+    cbar = subfigs[-1].colorbar(im, orientation="horizontal", extend='max')  # ,cax = cbar_ax
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_label(label='kg m$^{-3}$', fontsize=12)
+    plt.gca().invert_yaxis()
+
+    plt.show()
+    plt.savefig(global_vars.plot_dir + yr_name + 'vert_profile_' + title, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
@@ -152,7 +205,7 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, lower=False
     if lower:
         cbar = subfig.colorbar(im, orientation="horizontal", extend='max', shrink=sh)  # ,cax = cbar_ax
         cbar.ax.tick_params(labelsize=18)
-        cbar.set_label(label=unit, weight='bold', fontsize='18')
+        cbar.set_label(label=unit, fontsize='18') #, weight='bold'
     #     ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
     #                   linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
