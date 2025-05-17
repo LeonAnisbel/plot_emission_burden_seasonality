@@ -138,8 +138,8 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
                 ds_emi_gboxarea.where(ds.lat > 63, drop=True).sum(dim='time', skipna=True))   # convert to units of
             # Tg/month by summing up
         else:
-            ds_w_mean = utils.get_lalo_mean_pole(ds, weights)
-            var_ds_month.append(ds_w_mean)
+            var_ds_month.append(
+                ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
 
     var_ds = xr.concat(var_ds_month, dim='time')
     return var_ds

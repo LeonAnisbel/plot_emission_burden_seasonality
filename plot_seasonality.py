@@ -17,7 +17,7 @@ def format_func(value, tick_number):
     return N
 
 
-font = 14
+font = 12
 
 
 def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, title, limits, pos, left_axis=False):
@@ -156,18 +156,11 @@ def get_mean_reg(data_ds, gboxarea):
     reg_data = regions()
     for idx, reg_na in enumerate(list(reg_data.keys())):
         conditions = get_conds(data_ds.lat,
-                               data_ds.lon)
-        if reg_na == 'Greenland & Norwegian Sea':
-            v_subcond = []
-            for subcond in conditions[idx]:
-                v_subcond.append(get_var_reg(data_ds, subcond))
-            reg_sel_vals = xr.concat(v_subcond,
-                                     dim='lon')
-        else:
-            reg_sel_vals = get_var_reg(data_ds,
+                               lon)
+        reg_sel_vals = get_var_reg(data_ds,
+                                   conditions[idx])
+        reg_sel_vals_gba = get_var_reg(gboxarea,
                                        conditions[idx])
-            reg_sel_vals_gba = get_var_reg(gboxarea,
-                                           conditions[idx])
 
         _, weights = utils.get_weights_pole(mod_dir, exp, '201001', reg_sel_vals_gba)
         reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals, weights, whole_arctic=True)
