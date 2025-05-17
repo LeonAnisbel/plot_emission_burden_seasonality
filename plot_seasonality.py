@@ -36,7 +36,7 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
     variables = [C_emi[0], C_emi[1], C_emi[2], C_emi[3],
                  C_atmos[0], C_atmos[1], C_atmos[2]]
     labels = ['PCHO$_{aer}$', 'DCAA$_{aer}$', 'PL$_{aer}$',
-              'SS$_{aer}$', 'SIC', 'SST', 'Wind 10m']
+              'SS', 'SIC', 'SST', 'Wind 10m']
     legend = []
     colors = ['b', 'g', 'darkred', 'm',
               'lightblue', 'gray', 'k']
@@ -203,12 +203,12 @@ def seasonality_region_to_pickle_file(dict_seasonality):
 
 def plot_seasonality_region():
 
-    var_ids = ['Wind 10m \n (${m\ s^{-1}}$)',
+    var_ids = ['10m wind speed \n (m s${^{-1}}$)',
                'SIC (%)',
-               'SST (${C^{o}}$)',
-               'Emission of SS \n ($Tg\ month^{-1}$)',
-               'Emission of \n PCHO + DCAA ($Tg\ month^{-1}$)',
-               'Emission of PL \n ($Tg\ month^{-1}$)',
+               'SST (C$^{o}$)',
+               'SS emission\n (Tg month$^{-1}$)',
+               'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (Tg month$^{-1}$)',
+               'PL$_{aer}$ emission\n (Tg month$^{-1}$)',
                ]
 
     emi_lip = read_pkl_files('emi_LIP')
@@ -287,7 +287,7 @@ def plot_seanonality_reg_species(variables, ylabels):
                fontsize=font)
     fig.tight_layout()
 
-    plt.savefig(f'Multiannual monthly trends poles and subregions_color_emission_and_sic_sst.png',
+    plt.savefig(global_vars.plot_dir + 'Multiannual_monthly_seasonality_subregions_emission_sic_sst.png',
                 dpi=300,
                 bbox_inches="tight")
     plt.close()

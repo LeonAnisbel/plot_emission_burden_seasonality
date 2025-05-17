@@ -19,7 +19,7 @@ for idx, file_dir in enumerate(global_vars.experiments):
     dens_winter.append(dens_win)
 
 var_names = ['NUM_AS', 'NUM_CS']
-units = ['$10^{7} m^{-3}$', '$10^{5} m^{-3}$']
+units = ['10$^{7}$ m$^{-3}$', '10$^{5}$ m$^{-3}$']
 factor = [1e7, 1e5]
 for idx,var_na in enumerate(var_names):
     fig = plot_maps.create_fig(10, 7)

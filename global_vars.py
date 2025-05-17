@@ -13,19 +13,19 @@ titles = {'MOA': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$
                    ['10 m wind speed', r'$\bf{(c)}$'], ['Large scale precipitation', r'$\bf{(d)}$']]}
 unit = {'MOA': ['ng m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$'],
         'SS': ['µg m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$'],
-        'wind': ['µg m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$', '${m/s}$', 'mg m$^{-2}$ s$^{-1}$']}
+        'wind': ['µg m$^{-2}$ s$^{-1}$', 'mg m$^{-2}$', 'm/s', 'mg m$^{-2}$ s$^{-1}$']}
 vmax = {'MOA': [[0, 3.5], [0, 0.6]],
         'SS': [[0, 0.5], [0, 50]],
         'wind': [[0, 0.5], [0, 50], [0, 15], [0, 50]]}  # 0.1
 colorbar = {'MOA': ['Spectral_r', 'Spectral_r'],
             'SS': ['Spectral_r', 'Spectral_r'],
             'wind': ['Spectral_r', 'Spectral_r', 'jet', 'rainbow']}
-vmax_arctic = {'MOA': {'emi': [0.04, 0.2, 1.7],
+vmax_arctic = {'MOA': {'emi': [0.032, 0.15, 2],
                         'wdep': [0.02, 0.1, 1.2],
                        'burden': [0.001, 0.01, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}
-unit_arctic = {'MOA': {'emi': ['µg m$^{-2}$ s$^{-1}}$'],
-                       'wdep': ['µg m$^{-2}$ s$^{-1}}$'],
+unit_arctic = {'MOA': {'emi': ['ng m$^{-2}$ s$^{-1}}$'],
+                       'wdep': ['ng m$^{-2}$ s$^{-1}}$'],
                        'burden': ['mg m$^{-2}$']},
                'wind': ['   ', 'µg m$^{-2}$ s$^{-1}$',
                         'm/s', '$^{o}$C']}
