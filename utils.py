@@ -105,23 +105,38 @@ def get_var_reg(v, cond):
     return v
 
 
-def get_lalo_mean_pole(ds, w):
-    ds_pole = ds.where(ds.lat > 63, drop=True)
+def get_lalo_mean_pole(ds, w, whole_arctic=False):
+    if whole_arctic: ds_pole = ds.where(ds.lat > 63, drop=True)
+    else: ds_pole = ds
     ds_weighted = ds_pole.weighted(w)
-    ds_weighted_mean = ds_weighted.mean(dim='time', skipna=True)
+    ds_weighted_mean = ds_weighted.mean(dim=['lat', 'lon'], skipna=True)
     return ds_weighted_mean
+
+
+
+def get_weights_pole(mod_dir, exp, m, gboxarea_region, whole_arctic=False):
+    files = mod_dir + exp + f'*{m}.01_emi.nc'
+    gboxarea = read_files.read_nc_file(files, 'gboxarea')
+    if whole_arctic:
+        gboxarea_pole = gboxarea.where(gboxarea.lat > 63, drop=True)
+    else:
+        gboxarea_pole = gboxarea_region
+    weights = gboxarea_pole/ gboxarea_pole.sum(dim=('lat', 'lon'))
+
+    return gboxarea, weights
 
 
 def get_mean_max_moa(emi_moa, season):
     mod_dir = global_vars.model_output[0]
     exp = global_vars.experiments[0]
-    gboxarea, weights = read_files.get_weights_pole(mod_dir + exp + f'*201001.01_emi.nc')
+    gboxarea, weights = get_weights_pole(mod_dir, exp, '201001', None, whole_arctic=True)
 
     print('mean vals', season)
     list_vars = [emi_moa['emi_POL'], emi_moa['emi_PRO'], emi_moa['emi_LIP']]
-    for var in list_vars:
-        ds_w_mean = get_lalo_mean_pole(var, weights)
-        print('\n', ds_w_mean.values)
+    var_names = ['emi_POL', 'emi_PRO', 'emi_LIP']
+    for i, var in enumerate(list_vars):
+        ds_w_mean = get_lalo_mean_pole(var, weights, whole_arctic=True)
+        print('\n', var_names[i], ds_w_mean.values[0])
 
     print('max vals', season)
     print('POL', emi_moa['emi_POL'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
@@ -137,9 +152,9 @@ def get_mean_max_SS_SIC(var, name, season):
 
     mod_dir = global_vars.model_output[0]
     exp = global_vars.experiments[0]
-    gboxarea, weights = read_files.get_weights_pole(mod_dir + exp + f'*201001.01_emi.nc')
-    ds_w_mean = get_lalo_mean_pole(var, weights)
-    print(name, ds_w_mean.values)
+    gboxarea, weights = get_weights_pole(mod_dir, exp, '201001', None, whole_arctic=True)
+    ds_w_mean = get_lalo_mean_pole(var, weights, whole_arctic=True)
+    print(name, ds_w_mean.values[0])
     print('max vals', season)
     print(name, var.where(var.lat > 63, drop=True).max(skipna=True).values)
     print('  ')

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 import global_vars
+import utils
 from utils import get_var_reg, regions, get_conds
 import pandas as pd
 import seaborn as sns
@@ -146,7 +147,12 @@ def plot_all_seasonality(dict_seasonality):
                 bbox_inches="tight")
 
 
-def get_mean_reg(data_ds):
+def get_mean_reg(data_ds, gboxarea):
+    mod_dir = global_vars.model_output[0]
+    exp = global_vars.experiments[0]
+
+    lon = ((data_ds.lon + 180) % 360) - 180
+
     reg_data = regions()
     for idx, reg_na in enumerate(list(reg_data.keys())):
         conditions = get_conds(data_ds.lat,
@@ -160,10 +166,14 @@ def get_mean_reg(data_ds):
         else:
             reg_sel_vals = get_var_reg(data_ds,
                                        conditions[idx])
+            reg_sel_vals_gba = get_var_reg(gboxarea,
+                                           conditions[idx])
 
-        reg_data[reg_na] = reg_sel_vals.mean(
-                            dim=['lat', 'lon'],
-                            skipna=True)
+        _, weights = utils.get_weights_pole(mod_dir, exp, '201001', reg_sel_vals_gba)
+        reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals, weights, whole_arctic=True)
+
+        reg_data[reg_na] = reg_sel_vals_mean
+
     df_reg_data = pd.DataFrame(reg_data)
 
     return df_reg_data
@@ -178,20 +188,22 @@ def read_pkl_files(var_na):
     return var
 
 def seasonality_region_to_pickle_file(dict_seasonality):
-    emi_means_reg = {key: get_mean_reg(value) for key, value in dict_seasonality['emi']['seasonality'].items()}
+    gboxarea = dict_seasonality['emi']['seasonality']['gboxarea']
+    emi_means_reg = {key: get_mean_reg(value, gboxarea) for key, value in dict_seasonality['emi']['seasonality'].items()}
     emi_ss = emi_means_reg['emi_SS']
     emi_lip = emi_means_reg['emi_LIP']
     emi_pro = emi_means_reg['emi_PRO']
     emi_pol = emi_means_reg['emi_POL']
     emi_pol_pro = emi_pro + emi_pol
 
-    echam_means_reg = {key: get_mean_reg(value) for key, value in dict_seasonality['echam']['seasonality'].items()}
+    echam_means_reg = {key: get_mean_reg(value, gboxarea) for key, value in dict_seasonality['echam']['seasonality'].items()}
     seaice_m = echam_means_reg['seaice']
     seaice_mean = seaice_m*100
     sst_m = echam_means_reg['tsw']
     sst_mean = sst_m - 273.16
-    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'])
+    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea)
 
+    print('Save variable in pickle files')
     create_pkl_files(emi_lip, 'emi_LIP')
     create_pkl_files(emi_pol, 'emi_POL')
     create_pkl_files(emi_pol_pro, 'emi_POL_PRO')

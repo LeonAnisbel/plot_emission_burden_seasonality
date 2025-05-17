@@ -115,13 +115,6 @@ def read_nc_file(files, var):
                            ds[var])
     return ds
 
-def get_weights_pole(files):
-    gboxarea = read_nc_file(files, 'gboxarea')
-    gboxarea_pole = gboxarea.where(gboxarea.lat > 63, drop=True)
-    weights = gboxarea_pole['gboxarea'] / gboxarea_pole['gboxarea'].sum(dim=('lat', 'lon'))
-    return gboxarea, weights
-
-
 def read_individual_month(var, file_type, month, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
@@ -137,10 +130,8 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
 
         ds = read_nc_file(files, var)
 
-        gboxarea, weights = get_weights_pole(files)
-
         if var[:3] == 'emi':
-            ds_gboxarea = gboxarea.rename({'gboxarea': f'{var}'})
+            ds_gboxarea = read_nc_file(files, 'gboxarea').rename({'gboxarea': f'{var}'})
             factor_to_month = 1e-9 * 86400 * ds_gboxarea  # convert to units of Tg/d
             ds_emi_gboxarea = ds * factor_to_month
             var_ds_month.append(
