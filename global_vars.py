@@ -4,8 +4,18 @@ main_dir = main + 'echam_postproc/emi_burden_sfc_box_plots/'
 project_dir_glb = main_dir + 'mean_burden_and_emission/global_emission_burden_'
 plot_dir = main_dir + 'plot_emi_burden_maps/plots/'
 
-model_output = [main + 'my_experiments/' + experiments[0] + '/',
-                main + 'my_experiments/' + experiments[1] + '/']
+main_new = '/work/bb1178/b324073/'
+model_output = [main_new + experiments[0] + '/',
+                main_new + experiments[1] + '/']
+late_season = False
+if late_season:
+    seasons_months = {'summer': [7, 8, 9],
+                    'winter': [1, 2, 3]}
+    pkl_file_title = 'late_season_data'
+else:
+    seasons_months = {'summer': [4, 5, 6, 7, 8, 9],
+                    'winter': [10, 11, 12, 1, 2, 3]}
+    pkl_file_title = 'whole_season_data'
 
 titles = {'MOA': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],
           'SS': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],

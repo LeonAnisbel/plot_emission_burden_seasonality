@@ -46,14 +46,20 @@ def read_wind_prec_emi_ss(thirty_yrs=False):
     return emi_ss.isel(time=0), burden_ss.isel(time=0), wind.isel(time=0), precip.isel(time=0),
 
 
-def sel_time(data, month):
-    da_m = data.where((data.time.dt.month >= month[0]) &
-                      (data.time.dt.month <= month[-1]), drop=True)
-    return da_m
+def  sel_time(data, month, year):
+    data_yr = data.where((data.time.dt.year >= year[0]) &
+                      (data.time.dt.year <= year[-1]), drop=True)
+    da_m_list = []
+    for m in month:
+        da_m = data_yr.where(data_yr.time.dt.month == m, drop=True)
+        da_m_list.append(da_m)
+    da_m_season = xr.concat(da_m_list,
+                            dim='time')
+    return da_m_season
 
 
-def sel_var_season(ds, season, months, isice=False):
-    ds_season = sel_time(ds, months)
+def sel_var_season(ds, season, months, year, isice=False):
+    ds_season = sel_time(ds, months, year)
     season_mean = ds_season.mean(dim='time',
                                  skipna=True)
 
@@ -65,23 +71,12 @@ def sel_var_season(ds, season, months, isice=False):
     return season_mean
 
 
-def read_emi_ice_files(sum_mo, win_mo, file_type1, emi_var, file_type2, atm_var, exp_idx, isice=False):
+def read_emi_ice_files(sum_mo, win_mo, year, file_type1, emi_var, file_type2, atm_var, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
-    print(mod_dir)
     exp = global_vars.experiments[exp_idx]
     print('FILESSSSS', mod_dir + exp + f'*01_{file_type1}.nc')
     files1 = glob.glob(mod_dir + exp + f'*01_{file_type1}.nc')
     files2 = glob.glob(mod_dir + exp + f'*01_{file_type2}.nc')
-
-    files_filter_1 = []
-    files_filter_2 = []
-
-    #    for ff1,ff2 in zip(files1, files2):
-    #       if int(ff1[58:62]) > 2008:
-    #
-    #         files_filter_1.append(ff1)
-    #    if int(ff2[58:62]) > 2008:
-    #       files_filter_2.append(ff2)
 
     files_filter_2 = files2
     files_filter_1 = files1
@@ -93,17 +88,16 @@ def read_emi_ice_files(sum_mo, win_mo, file_type1, emi_var, file_type2, atm_var,
                                combine='nested',
                                preprocess=lambda ds:
                                ds[emi_var])
-    print(emi_ds)
     ice_ds = xr.open_mfdataset(files_filter_2,
                                concat_dim='time',
                                combine='nested',
                                preprocess=lambda ds:
                                ds[[atm_var]])
 
-    emi_ds_summer = sel_var_season(emi_ds, 'summer', sum_mo)
-    emi_ds_winter = sel_var_season(emi_ds, 'winter', win_mo)
-    ice_ds_summer = sel_var_season(ice_ds, 'summer', sum_mo, isice=isice)
-    ice_ds_winter = sel_var_season(ice_ds, 'winter', win_mo, isice=isice)
+    emi_ds_summer = sel_var_season(emi_ds, 'summer', sum_mo, year)
+    emi_ds_winter = sel_var_season(emi_ds, 'winter', win_mo, year)
+    ice_ds_summer = sel_var_season(ice_ds, 'summer', sum_mo, year, isice=isice)
+    ice_ds_winter = sel_var_season(ice_ds, 'winter', win_mo, year, isice=isice)
 
     return emi_ds_summer, emi_ds_winter, ice_ds_summer, ice_ds_winter
 
@@ -162,9 +156,10 @@ def read_vars_per_months():
     return vars_file_type
 
 
-def read_vars_per_seasons(sum_month, win_month):
+def read_vars_per_seasons(sum_month, win_month, years):
     omf_summer, omf_winter, wind_summer, wind_winter = (
         read_emi_ice_files(sum_month, win_month,
+                           years,
                            'ham',
                            ['OMF_POL', 'OMF_PRO', 'OMF_LIP'],
                            'vphysc',
@@ -177,6 +172,7 @@ def read_vars_per_seasons(sum_month, win_month):
 
     ss_summer, ss_winter, sst_summer, sst_winter = (
         read_emi_ice_files(sum_month, win_month,
+                           years,
                            'emi',
                            ['emi_SS'],
                            'echam',
@@ -186,6 +182,7 @@ def read_vars_per_seasons(sum_month, win_month):
 
     emi_summer, emi_winter, ice_summer, ice_winter = (
         read_emi_ice_files(sum_month, win_month,
+                           years,
                            'emi',
                            ['emi_POL', 'emi_PRO', 'emi_LIP'],
                            'echam',
@@ -195,6 +192,7 @@ def read_vars_per_seasons(sum_month, win_month):
 
     burden_summer, burden_winter, ice_summer, ice_winter = (
         read_emi_ice_files(sum_month, win_month,
+                           years,
                            'burden',
                            ['burden_POL', 'burden_PRO', 'burden_LIP'],
                            'echam',
@@ -205,6 +203,7 @@ def read_vars_per_seasons(sum_month, win_month):
 
     wdep_summer, wdep_winter, ice_summer, ice_winter = (
         read_emi_ice_files(sum_month, win_month,
+                           years,
                            'wetdep',
                            ['wdep_POL', 'wdep_PRO', 'wdep_LIP'],
                            'echam',
@@ -212,7 +211,7 @@ def read_vars_per_seasons(sum_month, win_month):
                            0,
                            isice=True))
 
-    return ([omf_tot_summer, omf_tot_winter],
+    return ([omf_summer, omf_winter],
             [wind_summer, wind_winter],
             [ss_summer, ss_winter],
             [sst_summer, sst_winter],

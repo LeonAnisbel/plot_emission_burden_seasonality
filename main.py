@@ -1,94 +1,34 @@
-import plot_maps, read_files, global_vars, utils
+import plot_maps, read_files, global_vars
 import plot_seasonality
 
 thirty_yrs = True  # change to False for 10 yrs mean plot (2009-2019)
+#plot_maps.plot_global_average_maps(thirty_yrs)
 
-### Plotting wind speed and
-
-# wind, precipitation, emi_ss, burden_ss = read_files.read_wind_prec_emi_ss(thirty_yrs=thirty_yrs)
-# plot_maps.plot_wind_prep_emi_burden_global(read_files.read_wind_prec_emi_ss(), 'wind',
-#                                            'global_wind_prec_emiss_burden_')
-
-# Plotting SS emission and burden
-# emi_tot, burden_tot = read_files.read_ss_emi_burden(thirty_yrs=thirty_yrs)
-# plot_maps.plot_emi_burden_global(emi_tot, burden_tot, 'SS')
-
-# # Plotting MOA emission and burden
-### To uncomment
-emi_tot, burden_tot, conc_tot = read_files.read_tot_moa_emi_burden(thirty_yrs=thirty_yrs)
-print('Read in emission')
-# utils.calculate_mean_values_oceans(emi_tot)
-
-print('\n Read in burden')
-# utils.calculate_mean_values_oceans(burden_tot)
-
-
-plot_maps.plot_emi_burden_maps_vert_profile(emi_tot,
-                                           burden_tot,
-                                            conc_tot,
-                                           'MOA',
-                                           thirty_yrs=thirty_yrs)
-
-plot_maps.plot_emi_burden_maps(emi_tot.where(emi_tot.lat > 50, drop=True),
-                               burden_tot.where(burden_tot.lat > 50, drop=True),
-                               'MOA',
-                               polar_proj=True,
-                               thirty_yrs=thirty_yrs)
-
-plot_maps.plot_emi_burden_maps(emi_tot,
-                               burden_tot,
-                               'MOA',
-                               thirty_yrs=thirty_yrs)
 
 print('Plot complete emission and Burden')
 print('start with Arctic analysis')
 
-sum_month, win_month = [7, 8, 9], [1, 2, 3]
-omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, wdep_moa, ice = read_files.read_vars_per_seasons(sum_month, win_month)
-# print(sum_month, win_month)
 fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
+seasons = global_vars.seasons_months
+years_list = [[1990, 2004], [2005, 2019], [1990, 2019]]
+years_names = ['1990-2004', '2005-2019', '1990-2019']
 
-# plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
-#                                         emi_ss[0]['emi_SS']*fac/1e3,
-#                                         wind[0]['velo10m'],
-#                                         sst[0]['tsw'] - 273],
-#                                        ice[0],
-#                                        'OMF_ss_emi_wind_sst_late',
-#                                        'wind')
-# print('start plot')
-# fac_mg = global_vars.factor_kg_to_mg  # factor to convert kg to mg
-# plot_maps.plot_emi_season(burden_moa[0] * fac_mg,
-#                           burden_moa[1] * fac_mg,
-#                           ice[0],
-#                           ice[1],
-#                           'burden',
-#                           'Surface burden late',
-#                           'MOA')
-print('finished plot')
-# exit()
-plot_maps.plot_emi_season(wdep_moa[0] * fac,
-                          wdep_moa[1] * fac,
-                          ice[0],
-                          ice[1],
-                          'wdep',
-                          'Surface wdep flux',
-                          'MOA',
-                          plot_ice=False)
+datasets_dict = {}
+for idx, yrs in enumerate(years_list):
+    datasets_dict[years_names[idx]] = {}
+    print('years: ', yrs)
+    omf_tot, wind, emi_ss, sst, emi_moa, burden_moa, wdep_moa, ice = read_files.read_vars_per_seasons(seasons['summer'],
+                                                                                                      seasons['winter'],
+                                                                                                      yrs)
+    for i, s in zip([0,1], seasons.keys()):
+        datasets_dict[years_names[idx]][s] = {'wind': wind[i],
+                                    'omf': omf_tot[i],
+                                    'burden_moa': burden_moa[i],
+                                    'wdep_moa': wdep_moa[i],
+                                    'ice': ice[i],
+                                    'sst': sst[i],
+                                    'emi_moa': emi_moa[i],
+                                    'emi_SS': emi_ss[i],}
 
-plot_maps.plot_emi_season(emi_moa[0] * fac,
-                          emi_moa[1] * fac,
-                          ice[0],
-                          ice[1],
-                          'emi',
-                          'Surface emission flux late',
-                          'MOA')
+plot_seasonality.create_pkl_files(datasets_dict, global_vars.pkl_file_title)
 
-
-utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
-utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
-
-utils.get_mean_max_SS_SIC(emi_ss[0] * fac / 1e3, 'emi_SS', 'summer')
-utils.get_mean_max_SS_SIC(emi_ss[1] * fac / 1e3, 'emi_SS', 'winter')
-
-utils.get_mean_max_SS_SIC(ice[0], 'seaice', 'summer')
-utils.get_mean_max_SS_SIC(ice[1], 'seaice', 'winter')
