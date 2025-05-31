@@ -33,13 +33,15 @@ def customize_axis(ax, titles, polar_proj, plot_diff=False):
         circle = mpath.Path(verts * radius + center)
         ax.set_boundary(circle, transform=ax.transAxes)
 
-        # gl = ax.gridlines(draw_labels=True, )
         ax.add_feature(cfeature.NaturalEarthFeature('physical', 'land',
                                                     '10m', edgecolor='black',
                                                     facecolor='oldlace'))
         ax.coastlines()
-        # gl.ylocator = mticker.FixedLocator([65, 75, 85])
-        # gl.yformatter = LATITUDE_FORMATTER
+        gl = ax.gridlines(draw_labels=True, )
+        gl.ylocator = mticker.FixedLocator([65, 75, 85])
+        gl.yformatter = LATITUDE_FORMATTER
+        gl.xlabel_style = {'size': 10}
+        gl.ylabel_style = {'size': 10}
     else:
         gl = ax.gridlines(crs=ccrs.PlateCarree(),
                           draw_labels=True,
@@ -103,6 +105,7 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
     cbar = subfig.colorbar(im, orientation="horizontal", extend='max')  # ,cax = cbar_ax
     cbar.ax.tick_params(labelsize=12)
     cbar.set_label(label=unit, fontsize=12)
+    cbar.ax.xaxis.set_major_formatter(FormatStrFormatter('%.3g'))
 
     customize_axis(axes, titles, polar_proj=polar_proj)
 
@@ -530,26 +533,30 @@ if __name__ == '__main__':
     data_dict = plot_seasonality.read_pkl_files(file_name)
     data_dict_yr = data_dict['1990-2019']
     fac = global_vars.factor_kg_to_ng
-#     emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
-#     emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
-#     ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
-#     plot_emi_season(emi_moa[0] * fac,
-#                       emi_moa[1] * fac,
-#                       ice[0]  ,
-#                       ice[1] ,
-#                       'emi',
-#                       'Surface_emission_flux_'+file_name,
-#                       'MOA')
+    emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
+    emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
+    ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
+
+    print('Done')
+    print('Calculate Arctic average values')
+
+    print()
+    utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
+    utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
+
+    utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
+    utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
+
+
+    plot_emi_season(emi_moa[0] * fac,
+                      emi_moa[1] * fac,
+                      ice[0]  ,
+                      ice[1] ,
+                      'emi',
+                      'Surface_emission_flux_'+file_name,
+                      'MOA')
 # #
-#     print('Done')
-#     print('Calculate Arctic average values')
-#
-#     print()
-#     utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
-#     utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
-#
-#     utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
-#     utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
+
 
     ice_diff_winter = data_dict['1990-2019']['winter']['ice']['seaice']
     ice_diff_summer = data_dict['1990-2019']['summer']['ice']['seaice']
