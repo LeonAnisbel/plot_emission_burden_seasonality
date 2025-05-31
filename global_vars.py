@@ -3,11 +3,11 @@ experiments = ['ac3_arctic', 'echam_base']
 main_dir = main + 'echam_postproc/emi_burden_sfc_box_plots/'
 project_dir_glb = main_dir + 'mean_burden_and_emission/global_emission_burden_'
 plot_dir = main_dir + 'plot_emi_burden_maps/plots/'
-
+lat_arctic_lim = 66
 main_new = '/work/bb1178/b324073/'
 model_output = [main_new + experiments[0] + '/',
                 main_new + experiments[1] + '/']
-late_season = False
+late_season = True
 if late_season:
     seasons_months = {'summer': [7, 8, 9],
                     'winter': [1, 2, 3]}
@@ -16,6 +16,7 @@ else:
     seasons_months = {'summer': [4, 5, 6, 7, 8, 9],
                     'winter': [10, 11, 12, 1, 2, 3]}
     pkl_file_title = 'whole_season_data'
+emi_lim = [0.032, 0.15, 2]
 
 titles = {'MOA': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],
           'SS': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],
@@ -30,7 +31,7 @@ vmax = {'MOA': [[0, 3.5], [0, 0.6]],
 colorbar = {'MOA': ['Spectral_r', 'Spectral_r'],
             'SS': ['Spectral_r', 'Spectral_r'],
             'wind': ['Spectral_r', 'Spectral_r', 'jet', 'rainbow']}
-vmax_arctic = {'MOA': {'emi': [0.032, 0.15, 2],
+vmax_arctic = {'MOA': {'emi': emi_lim,
                         'wdep': [0.02, 0.1, 1.2],
                        'burden': [0.001, 0.01, 0.1]},
                'wind': [0.4, 0.15, 9, 20]}

@@ -8,7 +8,6 @@ thirty_yrs = True  # change to False for 10 yrs mean plot (2009-2019)
 print('Plot complete emission and Burden')
 print('start with Arctic analysis')
 
-fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
 seasons = global_vars.seasons_months
 years_list = [[1990, 2004], [2005, 2019], [1990, 2019]]
 years_names = ['1990-2004', '2005-2019', '1990-2019']

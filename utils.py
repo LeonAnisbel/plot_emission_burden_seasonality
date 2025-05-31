@@ -60,7 +60,7 @@ def calculate_mean_values_oceans(data):
 
 
 def get_conds(lat, lon):
-    conditions = [[[lat, 63, 90]],
+    conditions = [[[lat, global_vars.lat_arctic_lim, 90]],
                   [[lat, 66, 82], [lon, 20, 60]],
                   [[lat, 66, 82], [lon, 60, 100]],
                   [[lat, 66, 82], [lon, 100, 140]],
@@ -106,7 +106,7 @@ def get_var_reg(v, cond):
 
 
 def get_lalo_mean_pole(ds, w, whole_arctic=False):
-    if whole_arctic: ds_pole = ds.where(ds.lat > 63, drop=True)
+    if whole_arctic: ds_pole = ds.where(ds.lat > global_vars.lat_arctic_lim, drop=True)
     else: ds_pole = ds
     ds_weighted = ds_pole.weighted(w)
     ds_weighted_mean = ds_weighted.mean(dim=['lat', 'lon'], skipna=True)
@@ -118,12 +118,13 @@ def get_weights_pole(mod_dir, exp, m, gboxarea_region, whole_arctic=False):
     files = mod_dir + exp + f'*{m}.01_emi.nc'
     gboxarea = read_files.read_nc_file(files, 'gboxarea')
     if whole_arctic:
-        gboxarea_pole = gboxarea.where(gboxarea.lat > 63, drop=True)
+        gboxarea_pole = gboxarea.where(gboxarea.lat > global_vars.lat_arctic_lim
+, drop=True)
     else:
         gboxarea_pole = gboxarea_region
     weights = gboxarea_pole/ gboxarea_pole.sum(dim=('lat', 'lon'))
 
-    return gboxarea, weights
+    return gboxarea_pole, weights
 
 
 def get_mean_max_moa(emi_moa, season):
@@ -139,9 +140,10 @@ def get_mean_max_moa(emi_moa, season):
         print('\n', var_names[i], ds_w_mean.values[0])
 
     print('max vals', season)
-    print('POL', emi_moa['emi_POL'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
-    print('PRO', emi_moa['emi_PRO'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
-    print('LIP', emi_moa['emi_LIP'].where(emi_moa.lat > 63, drop=True).max(skipna=True).values)
+    arctic_lim = global_vars.lat_arctic_lim
+    print('POL', emi_moa['emi_POL'].where(emi_moa.lat > arctic_lim, drop=True).max(skipna=True).values)
+    print('PRO', emi_moa['emi_PRO'].where(emi_moa.lat > arctic_lim, drop=True).max(skipna=True).values)
+    print('LIP', emi_moa['emi_LIP'].where(emi_moa.lat > arctic_lim, drop=True).max(skipna=True).values)
     print('  ')
 
 
@@ -156,5 +158,6 @@ def get_mean_max_SS_SIC(var, name, season):
     ds_w_mean = get_lalo_mean_pole(var, weights, whole_arctic=True)
     print(name, ds_w_mean.values[0])
     print('max vals', season)
-    print(name, var.where(var.lat > 63, drop=True).max(skipna=True).values)
+    arctic_lim = global_vars.lat_arctic_lim
+    print(name, var.where(var.lat > arctic_lim, drop=True).max(skipna=True).values)
     print('  ')
