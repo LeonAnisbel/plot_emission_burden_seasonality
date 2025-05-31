@@ -9,9 +9,6 @@ from utils import get_var_reg, regions, get_conds
 import pandas as pd
 import seaborn as sns
 
-fac = global_vars.factor_kg_to_ng  # factor to convert kg to ng
-
-
 def format_func(value, tick_number):
     N = int(value + 1)
     return N
@@ -78,13 +75,23 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
 
 
 def plot_seasons_reg(ax, C_conc, c, mark, ylabels, reg_gray_line=False, botton_label=True):
-    t_ax = C_conc.index
-    print(C_conc)
-    p2 = sns.lineplot(data=C_conc,
-                 palette=c,
-                 linewidth=1.5,
-                 linestyle='dashed',
-                 ax = ax)
+    t_ax = C_conc[0].index
+    print(C_conc[0])
+    p2 = sns.lineplot(data=C_conc[0],
+                     palette=c,
+                     linewidth=1.5,
+                     linestyle='dashed',
+                     ax = ax)
+    for i, region in enumerate(C_conc[0].columns):
+        ax.errorbar(
+            t_ax,
+            C_conc[0][region],
+            yerr=C_conc[1][region],
+            fmt='none',
+            ecolor=c[i],
+            linestyle='dashed',
+            linewidth=1.5
+        )
 
     ax.set_ylabel(ylabels,
                   fontsize=font)
@@ -105,7 +112,12 @@ def plot_seasons_reg(ax, C_conc, c, mark, ylabels, reg_gray_line=False, botton_l
 
     return p2
 
-def get_mean(da):
+def get_mean(dict, var_type, var_na ):
+    da = dict[var_type]['seasonality'][var_na]
+    # if var_type == 'emi':
+    #     da = da.sum(dim=['lat', 'lon'],
+    #                  skipna=True)
+    # else:
     da = da.mean(dim=['lat', 'lon'],
                  skipna=True)
     return da.compute()
@@ -116,15 +128,15 @@ def plot_all_seasonality(dict_seasonality):
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
 
-    emi_pol_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_POL']) * fac
-    emi_pro_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_PRO']) * fac
-    emi_lip_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_LIP']) * fac
-    emi_ss_mean = get_mean(dict_seasonality['emi']['seasonality']['emi_SS']) * fac
+    emi_pol_mean = get_mean(dict_seasonality,'emi', 'emi_POL')
+    emi_pro_mean = get_mean(dict_seasonality,'emi', 'emi_PRO')
+    emi_lip_mean = get_mean(dict_seasonality,'emi', 'emi_LIP')
+    emi_ss_mean = get_mean(dict_seasonality,'emi', 'emi_SS')
     print('finished computing means emi')
 
-    seaice_mean = get_mean(dict_seasonality['echam']['seasonality']['seaice'])
-    sst_mean = get_mean(dict_seasonality['echam']['seasonality']['tsw']) - 273.16
-    wind = get_mean(dict_seasonality['vphysc']['seasonality']['velo10m'])
+    seaice_mean = get_mean(dict_seasonality, 'echam', 'seaice')
+    sst_mean = get_mean(dict_seasonality, 'echam', 'tsw') - 273.16
+    wind = get_mean(dict_seasonality, 'vphysc', 'velo10m')
 
     print('finished computing means')
     plot_monthly_series_pannel(ax, fig,
@@ -147,7 +159,7 @@ def plot_all_seasonality(dict_seasonality):
                 bbox_inches="tight")
 
 
-def get_mean_reg(data_ds, gboxarea):
+def get_mean_reg(data_ds, gboxarea, var_type):
     mod_dir = global_vars.model_output[0]
     exp = global_vars.experiments[0]
 
@@ -163,9 +175,15 @@ def get_mean_reg(data_ds, gboxarea):
                                        conditions[idx])
 
         _, weights = utils.get_weights_pole(mod_dir, exp, '201001', reg_sel_vals_gba)
-        reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals, weights, whole_arctic=True)
+        if var_type == 'emi':
+            reg_sel_vals_gbx = reg_sel_vals * reg_sel_vals_gba # Tg/month/m2 to Tg/month
+        else:
+            reg_sel_vals_gbx = reg_sel_vals
+        reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals_gbx, weights, whole_arctic=True)
 
-        reg_data[reg_na] = reg_sel_vals_mean
+        print('finished computing reg. weights', reg_sel_vals_mean.time, '\n')
+        reg_data[reg_na]['values'] = reg_sel_vals_mean.groupby("time.month").mean(dim="time", skipna=True)
+        reg_data[reg_na]['std'] = reg_sel_vals_mean.groupby("time.month").std(dim="time", skipna=True)
 
     df_reg_data = pd.DataFrame(reg_data)
 
@@ -181,20 +199,21 @@ def read_pkl_files(var_na):
     return var
 
 def seasonality_region_to_pickle_file(dict_seasonality):
-    gboxarea = dict_seasonality['emi']['seasonality']['gboxarea']
-    emi_means_reg = {key: get_mean_reg(value, gboxarea) for key, value in dict_seasonality['emi']['seasonality'].items()}
+    gboxarea = dict_seasonality['emi_gbx']['seasonality']['gboxarea']
+
+    emi_means_reg = {key: get_mean_reg(value, gboxarea, 'emi') for key, value in dict_seasonality['emi']['seasonality'].items()}
     emi_ss = emi_means_reg['emi_SS']
     emi_lip = emi_means_reg['emi_LIP']
     emi_pro = emi_means_reg['emi_PRO']
     emi_pol = emi_means_reg['emi_POL']
     emi_pol_pro = emi_pro + emi_pol
 
-    echam_means_reg = {key: get_mean_reg(value, gboxarea) for key, value in dict_seasonality['echam']['seasonality'].items()}
+    echam_means_reg = {key: get_mean_reg(value, gboxarea, 'echam') for key, value in dict_seasonality['echam']['seasonality'].items()}
     seaice_m = echam_means_reg['seaice']
-    seaice_mean = seaice_m*100
+    # seaice_mean = seaice_m*100
     sst_m = echam_means_reg['tsw']
-    sst_mean = sst_m - 273.16
-    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea)
+    # sst_mean = sst_m['vallues'] - 273.16
+    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea, 'vphysc')
 
     print('Save variable in pickle files')
     create_pkl_files(emi_lip, 'emi_LIP')
@@ -202,9 +221,21 @@ def seasonality_region_to_pickle_file(dict_seasonality):
     create_pkl_files(emi_pol_pro, 'emi_POL_PRO')
     create_pkl_files(emi_pro, 'emi_PRO')
     create_pkl_files(emi_ss, 'emi_SS')
-    create_pkl_files(seaice_mean, 'seaice')
-    create_pkl_files(sst_mean, 'sst')
+    create_pkl_files(seaice_m, 'seaice')
+    create_pkl_files(sst_m, 'sst')
     create_pkl_files(wind_mean, 'veloc10m')
+
+
+def data_df_new(data_df):
+    reg_data = regions()
+    reg_data_std = regions()
+    for idx, reg_na in enumerate(list(reg_data.keys())):
+        reg_data[reg_na] = data_df[reg_na]['values']
+        reg_data_std[reg_na] = data_df[reg_na]['std']
+
+    df_reg_data = pd.DataFrame(reg_data)
+    df_reg_data_std = pd.DataFrame(reg_data_std)
+    return [df_reg_data, df_reg_data_std]
 
 def plot_seasonality_region():
 
@@ -223,15 +254,21 @@ def plot_seasonality_region():
     sst = read_pkl_files('sst')
     wind = read_pkl_files('veloc10m')
 
-    variables = [wind,
-                 seaice,
-                 sst,
-                 emi_ss,
-                 emi_pol_pro,
-                 emi_lip,
+    # adapt dataframe containing data and std to plot with sns
+
+
+    variables = [data_df_new(wind),
+                 data_df_new(seaice)*100,
+                 data_df_new(sst),
+                 data_df_new(emi_ss),
+                 data_df_new(emi_pol_pro),
+                 data_df_new(emi_lip),
                  ]
 
-    plot_seanonality_reg_species(variables,
+    var_values = [i[0] for i in variables]
+    var_std = [i[1] for i in variables]
+
+    plot_seanonality_reg_species([var_values, var_std],
                                  var_ids)
 
 
@@ -247,14 +284,19 @@ def plot_seanonality_reg_species(variables, ylabels):
     mark.insert(0, '_')
 
     xaxislabel = False
-    for i in range(len(variables)):
+    for i in range(len(variables[0])):
         leg_list = []
-        C_var = variables[i]
+        if ylabels[i] == 'SST (C$^{o}$)':
+            ff = 273.16
+        else:
+            ff = 0
+
+        C_var = variables[0][i] - ff
         if i > 2:
             xaxislabel = True
 
         p2 = plot_seasons_reg(ax[i],
-                              C_var,
+                              [C_var, variables[1][i]],
                               color_reg,
                               mark,
                               ylabels[i],

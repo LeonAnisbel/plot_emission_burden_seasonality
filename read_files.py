@@ -1,3 +1,5 @@
+import pandas as pd
+
 import global_vars
 import xarray as xr
 import glob
@@ -113,35 +115,33 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
 
-    var_ds_month = []
-    for m in month:
-        if m <= 9:
-            m = '0' + str(m)
-        else:
-            m = str(m)
 
-        files = glob.glob(mod_dir + exp + f'*{m}.01_{file_type}.nc')
+    if file_type == 'emi_gbx':
+        file_type_read = 'emi'
+    else:
+        file_type_read = file_type
 
-        ds = read_nc_file(files, var)
+    files = glob.glob(mod_dir + exp + f'*.01_{file_type_read}.nc')  # {yr}{m}
+    ds = read_nc_file(files, var)
+    ds_arctic = ds.where(ds.lat > global_vars.lat_arctic_lim, drop=True)
+    ds_arctic["time"] = pd.to_datetime(ds_arctic.time.values)
+    ds_arctic = ds_arctic.sortby("time")
 
-        if var[:3] == 'emi':
-            ds_gboxarea = read_nc_file(files, 'gboxarea').rename({'gboxarea': f'{var}'})
-            factor_to_month = 1e-9 * 86400 * ds_gboxarea  # convert to units of Tg/d
-            ds_emi_gboxarea = ds * factor_to_month
-            var_ds_month.append(
-                ds_emi_gboxarea.where(ds.lat > 63, drop=True).sum(dim='time', skipna=True))   # convert to units of
-            # Tg/month by summing up
-        else:
-            var_ds_month.append(
-                ds.where(ds.lat > 63, drop=True).mean(dim='time', skipna=True))
+    if file_type == 'emi':
+        factor_to_month = 1e-9 * 86400   # convert to units of Tg/d
+        ds_arctic_emi = ds_arctic.resample(time="1M").sum(dim="time", skipna=True)# convert to units of Tg/month by summing up
+        ds_arctic_time = ds_arctic_emi * factor_to_month
+    else:
 
-    var_ds = xr.concat(var_ds_month, dim='time')
-    return var_ds
+        ds_arctic_time = ds_arctic.resample(time="1M").mean(dim="time", skipna=True)
+
+    return ds_arctic_time.compute()
 
 
 def read_vars_per_months():
     months = np.arange(1, 13)
-    vars_file_type = {'emi': {'var': ['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS', 'gboxarea']},
+    vars_file_type = {'emi': {'var': ['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS']},
+                      'emi_gbx': {'var': ['gboxarea']},
                       'echam': {'var': ['seaice', 'tsw']},
                       'vphysc': {'var': ['velo10m']},
                       }
