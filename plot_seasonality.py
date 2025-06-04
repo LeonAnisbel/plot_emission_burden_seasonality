@@ -190,11 +190,11 @@ def get_mean_reg(data_ds, gboxarea, var_type):
     return df_reg_data
 
 def create_pkl_files(data, var_na):
-    with open(f"./pd_files/{var_na}_seasonality.pkl", "wb") as File:
+    with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "wb") as File:
         pickle.dump(data, File)
 
 def read_pkl_files(var_na):
-    with open(f"./pd_files/{var_na}_seasonality.pkl", "rb") as File:
+    with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "rb") as File:
         var = pickle.load(File)
     return var
 
