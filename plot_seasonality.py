@@ -201,18 +201,22 @@ def read_pkl_files(var_na):
 def seasonality_region_to_pickle_file(dict_seasonality):
     gboxarea = dict_seasonality['emi_gbx']['seasonality']['gboxarea']
 
-    emi_means_reg = {key: get_mean_reg(value, gboxarea, 'emi') for key, value in dict_seasonality['emi']['seasonality'].items()}
+    emi_means_reg = {key: get_mean_reg(value, gboxarea, 'emi')
+                     for key, value in dict_seasonality['emi']['seasonality'].items()}
     emi_ss = emi_means_reg['emi_SS']
     emi_lip = emi_means_reg['emi_LIP']
     emi_pro = emi_means_reg['emi_PRO']
     emi_pol = emi_means_reg['emi_POL']
     emi_pol_pro = emi_pro + emi_pol
 
-    echam_means_reg = {key: get_mean_reg(value, gboxarea, 'echam') for key, value in dict_seasonality['echam']['seasonality'].items()}
+    echam_means_reg = {key: get_mean_reg(value, gboxarea, 'echam')
+                       for key, value in dict_seasonality['echam']['seasonality'].items()}
     seaice_m = echam_means_reg['seaice']
-    # seaice_mean = seaice_m*100
+
+    open_ocean_fraction = 1 - dict_seasonality['echam']['seasonality']['seaice']
+    open_ocean_fraction_m =  get_mean_reg(open_ocean_fraction, gboxarea, 'open_ocean_frac')
+
     sst_m = echam_means_reg['tsw']
-    # sst_mean = sst_m['vallues'] - 273.16
     wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea, 'vphysc')
 
     print('Save variable in pickle files')
@@ -224,6 +228,7 @@ def seasonality_region_to_pickle_file(dict_seasonality):
     create_pkl_files(seaice_m, 'seaice')
     create_pkl_files(sst_m, 'sst')
     create_pkl_files(wind_mean, 'veloc10m')
+    create_pkl_files(open_ocean_fraction_m, 'open_ocean_frac')
 
 
 def data_df_new(data_df):
