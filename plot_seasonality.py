@@ -245,7 +245,7 @@ def data_df_new(data_df):
 def plot_seasonality_region():
 
     var_ids = ['10m wind speed \n (m s${^{-1}}$)',
-               'SIC (%)',
+               'Open ocean fraction (%)',
                'SST (C$^{o}$)',
                'SS emission\n (Tg month$^{-1}$)',
                'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (Tg month$^{-1}$)',
@@ -255,7 +255,7 @@ def plot_seasonality_region():
     emi_lip = read_pkl_files('emi_LIP')
     emi_pol_pro = read_pkl_files('emi_POL_PRO')
     emi_ss = read_pkl_files('emi_SS')
-    seaice = read_pkl_files('seaice')
+    seaice = read_pkl_files('open_ocean_frac')
     sst = read_pkl_files('sst')
     wind = read_pkl_files('veloc10m')
 
