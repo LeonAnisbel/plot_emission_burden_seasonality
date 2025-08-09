@@ -8,7 +8,7 @@ plot_dir = main_dir + f'plot_emi_burden_maps/plots_{lat_arctic_lim}/'
 main_new = '/work/bb1178/b324073/'
 model_output = [main_new + experiments[0] + '/',
                 main_new + experiments[1] + '/']
-late_season = True
+late_season = False
 if late_season:
     seasons_months = {'summer': [7, 8, 9],
                     'winter': [1, 2, 3]}
@@ -17,7 +17,7 @@ else:
     seasons_months = {'summer': [4, 5, 6, 7, 8, 9],
                     'winter': [10, 11, 12, 1, 2, 3]}
     pkl_file_title = 'whole_season_data'
-emi_lim = [0.032, 0.15, 2]
+emi_lim = [0.032, 0.15, 2.1]
 
 titles = {'MOA': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],
           'SS': [['Surface emission flux', r'$\bf{(a)}$'], ['Total burden', r'$\bf{(b)}$']],

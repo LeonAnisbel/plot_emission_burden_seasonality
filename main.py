@@ -29,5 +29,5 @@ for idx, yrs in enumerate(years_list):
                                     'emi_moa': emi_moa[i],
                                     'emi_SS': emi_ss[i],}
 
-plot_seasonality.create_pkl_files(datasets_dict, global_vars.pkl_file_title)
+plot_seasonality.create_pkl_files(datasets_dict, global_vars.pkl_file_title+'_15_years_aver')
 

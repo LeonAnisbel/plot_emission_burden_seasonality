@@ -37,11 +37,12 @@ def customize_axis(ax, titles, polar_proj, plot_diff=False):
                                                     '10m', edgecolor='black',
                                                     facecolor='oldlace'))
         ax.coastlines()
-        gl = ax.gridlines(draw_labels=True, )
-        gl.ylocator = mticker.FixedLocator([65, 75, 85])
-        gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'size': 10}
-        gl.ylabel_style = {'size': 10}
+        if not plot_diff:
+            gl = ax.gridlines(draw_labels=True, )
+            gl.ylocator = mticker.FixedLocator([65, 75, 85])
+            gl.yformatter = LATITUDE_FORMATTER
+            gl.xlabel_style = {'size': 10}
+            gl.ylabel_style = {'size': 10}
     else:
         gl = ax.gridlines(crs=ccrs.PlateCarree(),
                           draw_labels=True,
@@ -218,10 +219,10 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name, lower
             im = axes[i].pcolormesh(moa[i].lon, moa[i].lat, moa[i],
                                  cmap=cmap, vmin=-vma, vmax=vma,transform=ccrs.PlateCarree(), alpha=0.8)
             customize_axis(axes[i], titles[i], polar_proj=polar_proj, plot_diff=plot_diff)
-            if titles[0][0] == 'DCAA$_{aer}$ \n':
-                subfig.suptitle('\n'+ name + '\n \n',
-                                 fontsize='16',
-                                 weight='bold')
+            # if titles[0][0] == 'DCAA$_{aer}$ \n':
+            #     subfig.suptitle('\n'+ name + '\n \n \n \n',
+            #                      fontsize='16',
+            #                      weight='bold')
             if plot_ice:
                 ic = axes[i].contourf(ice[i].lon,
                                       ice[i].lat,
@@ -229,15 +230,19 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name, lower
                                       np.arange(10, 110, 30),  # levels=5,
                                       cmap='Greys_r',
                                       transform=ccrs.PlateCarree())
+            axes[i].set_position([0, 0, 1, 1], which='both')
+
         ext = 'both'
+        cbar_ax = subfig.add_axes([0.28, 0.17, 0.45, 0.05]) #(left, bottom, width, height)
         cbar = subfig.colorbar(im,
                                orientation="horizontal",
                                shrink=sh,
-                               ax=axes.ravel().tolist(),
+                               cax=cbar_ax,
+                               ax=axes,
                                extend=ext,
                                pad=0.000001,)
-        cbar.ax.tick_params(labelsize=14)
-        cbar.set_label(label=unit, fontsize='14')  # , weight='bold'
+        cbar.ax.tick_params(labelsize=16)
+        cbar.set_label(label=unit, fontsize='16')  # , weight='bold'
         cbar.ax.xaxis.set_major_formatter(FormatStrFormatter('%.3g'))
 
     else:
@@ -342,15 +347,13 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
 
 
 def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=False):
-    fig = plt.figure(figsize=(14, 12))
+    fig = plt.figure(figsize=(14, 11))
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6), (subfig7, subfig8, subfig9)  = fig.subfigures(nrows=3,
-                                                                                                          ncols=3,
-                                                                                                          hspace=0.07,
-                                                                                                        wspace=0.04,)
-    subfigs_emi = [subfig1, subfig2, subfig3]
-    subfigs_burden = [subfig4, subfig5, subfig6]
-    subfigs_wdep = [subfig7, subfig8, subfig9]
+                                                                                                          ncols=3)
+    subfigs_omf = [subfig1, subfig2, subfig3]
+    subfigs_emi = [subfig4, subfig5, subfig6]
+    subfigs_burden = [subfig7, subfig8, subfig9]
 
 
     moa_emi = [[moa_emi[0]['emi_POL'], moa_emi[1]['emi_POL']],
@@ -365,15 +368,33 @@ def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=
                [moa_wdep[0]['OMF_PRO'], moa_wdep[1]['OMF_PRO']],
                [moa_wdep[0]['OMF_LIP'], moa_wdep[1]['OMF_LIP']],
                ]
-    names = [[['PCHO$_{aer}$ \n', 'Winter'], ['', 'Summer']],
-                [['DCAA$_{aer}$ \n', 'Winter'], ['', 'Summer']],
-                [['PL$_{aer}$ \n', 'Winter'], ['', 'Summer']]]
+    names = [[['PCHO$_{aer}$ \n', 'Winter'], [r'$\bf{OMF}$'+' \n', 'Summer']], #r'$\bf{(a)}$'
+                [['DCAA$_{aer}$ \n', 'Winter'], [r'$\bf{OMF}$'+' \n', 'Summer']],
+                [['PL$_{aer}$ \n', 'Winter'], [r'$\bf{OMF}$'+' \n', 'Summer']]]
     units_emi = global_vars.unit_arctic['MOA']['emi'][0]
     units_burden = global_vars.unit_arctic['MOA']['burden'][0]
     vm_emi = [0.003, 0.01, 0.6]
     vm_burden = [0.0001, 0.0005, 0.01]
     vm_omf = [0.0003, 0.001, 0.03]
 
+    for idx, subf in enumerate(subfigs_omf):
+        ic = each_fig_season(subf,
+                             moa_wdep[idx],
+                             seaice,
+                             names[idx],
+                             ' ',
+                             vm_omf[idx],
+                             'bwr',
+                             0.7,
+                        'OMF',
+                        lower=True,
+                        plot_ice=True,
+                        plot_diff=True,)
+    add_ice_colorbar(fig, ic,18,  plot_ice=True)
+
+    names = [[['PCHO$_{aer}$ \n', 'Winter'], [r'$\bf{Emission flux}$'+' \n', 'Summer']], #r'$\bf{(a)}$'
+                [['DCAA$_{aer}$ \n', 'Winter'], [r'$\bf{Emission flux}$'+' \n', 'Summer']],
+                [['PL$_{aer}$ \n', 'Winter'], [r'$\bf{Emission flux}$'+' \n', 'Summer']]]
     for idx, subf in enumerate(subfigs_emi):
         print(idx)
         each_fig_season(subf,
@@ -389,6 +410,9 @@ def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=
                      plot_ice=plot_ice,
                     plot_diff=True,)
 
+    names = [[['PCHO$_{aer}$ \n', 'Winter'], [r'$\bf{Burden}$'+' \n', 'Summer']], #r'$\bf{(a)}$'
+                [['DCAA$_{aer}$ \n', 'Winter'], [r'$\bf{Burden}$'+' \n', 'Summer']],
+                [['PL$_{aer}$ \n', 'Winter'], [r'$\bf{Burden}$'+' \n', 'Summer']]]
     for idx, subf in enumerate(subfigs_burden):
         each_fig_season(subf,
                              moa_burden[idx],
@@ -403,21 +427,13 @@ def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=
                         plot_ice=plot_ice,
                         plot_diff=True,)
 
-    for idx, subf in enumerate(subfigs_wdep):
-        ic = each_fig_season(subf,
-                             moa_wdep[idx],
-                             seaice,
-                             names[idx],
-                             ' ',
-                             vm_omf[idx],
-                             'bwr',
-                             0.7,
-                        'OMF',
-                        lower=True,
-                        plot_ice=True,
-                        plot_diff=True,)
-    add_ice_colorbar(fig, ic,14,  plot_ice=True)
 
+    # 3) global spacing tweak
+    fig.subplots_adjust(
+        left=0.05, right=0.95,
+        bottom=0.05, top=0.95,
+        wspace=0.10, hspace=0.12
+    )
     plt.savefig(global_vars.plot_dir + title + '_pole_emiss.png', dpi=300, bbox_inches="tight")
 
 
@@ -529,34 +545,39 @@ if __name__ == '__main__':
         #                           'Surface wdep flux',
         #                           'MOA',
         #                           plot_ice=False)
-    file_name = global_vars.pkl_file_title
-    data_dict = plot_seasonality.read_pkl_files(file_name)
-    data_dict_yr = data_dict['1990-2019']
+
+
+    # file_name = global_vars.pkl_file_title
+    # data_dict = plot_seasonality.read_pkl_files(file_name)
     fac = global_vars.factor_kg_to_ng
-    emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
-    emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
-    ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
 
-    print('Done')
-    print('Calculate Arctic average values')
+ #     data_dict_yr = data_dict['1990-2019']
+#     emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
+#     emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
+#     ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
+#
+#     print('Done')
+#     print('Calculate Arctic average values')
+#
+#     print()
+#     utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
+#     utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
+#
+#     utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
+#     utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
+#
+#
+#     plot_emi_season(emi_moa[0] * fac,
+#                       emi_moa[1] * fac,
+#                       ice[0]  ,
+#                       ice[1] ,
+#                       'emi',
+#                       'Surface_emission_flux_'+file_name,
+#                       'MOA')
+# # #
 
-    print()
-    utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
-    utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
-
-    utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
-    utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
-
-
-    plot_emi_season(emi_moa[0] * fac,
-                      emi_moa[1] * fac,
-                      ice[0]  ,
-                      ice[1] ,
-                      'emi',
-                      'Surface_emission_flux_'+file_name,
-                      'MOA')
-# #
-
+    file_name = global_vars.pkl_file_title + '_15_years_aver'
+    data_dict = plot_seasonality.read_pkl_files(file_name)
 
     ice_diff_winter = data_dict['1990-2019']['winter']['ice']['seaice']
     ice_diff_summer = data_dict['1990-2019']['summer']['ice']['seaice']
