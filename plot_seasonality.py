@@ -1,4 +1,5 @@
 import pickle
+from matplotlib.ticker import FormatStrFormatter
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,7 +75,7 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                bbox_to_anchor=(0.94, 1))
 
 
-def plot_seasons_reg(ax, C_conc, c, mark, ylabels, reg_gray_line=False, botton_label=True):
+def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_gray_line=False, botton_label=True):
     t_ax = C_conc[0].index
     print(C_conc[0])
     p2 = sns.lineplot(data=C_conc[0],
@@ -177,6 +178,7 @@ def get_mean_reg(data_ds, gboxarea, var_type):
         _, weights = utils.get_weights_pole(mod_dir, exp, '201001', reg_sel_vals_gba)
         if var_type == 'emi':
             reg_sel_vals_gbx = reg_sel_vals * reg_sel_vals_gba # Tg/month/m2 to Tg/month
+            # reg_sel_vals_mean = reg_sel_vals_gbx.sum(dim=['lat', 'lon'], skipna=True)
         else:
             reg_sel_vals_gbx = reg_sel_vals
         reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals_gbx, weights, whole_arctic=True)
@@ -246,15 +248,15 @@ def plot_seasonality_region():
 
     var_ids = ['10m wind speed \n (m s${^{-1}}$)',
                'Open ocean fraction (%)',
-               'SST (C$^{o}$)',
-               'SS emission\n (Tg month$^{-1}$)',
-               'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (Tg month$^{-1}$)',
-               'PL$_{aer}$ emission\n (Tg month$^{-1}$)',
+               'SST ($^{o}$C)',
+               'SS emission\n (10$^{-3}$ Tg month$^{-1}$)',
+               'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (10$^{-6}$ Tg month$^{-1}$)',
+               'PL$_{aer}$ emission \n (10$^{-5}$ Tg month$^{-1}$)',
                ]
 
-    emi_lip = read_pkl_files('emi_LIP')
-    emi_pol_pro = read_pkl_files('emi_POL_PRO')
-    emi_ss = read_pkl_files('emi_SS')
+    emi_lip = read_pkl_files('emi_LIP') * 1e5
+    emi_pol_pro = read_pkl_files('emi_POL_PRO') * 1e6
+    emi_ss = read_pkl_files('emi_SS') * 1e3
     seaice = read_pkl_files('open_ocean_frac')
     sst = read_pkl_files('sst')
     wind = read_pkl_files('veloc10m')
@@ -278,8 +280,17 @@ def plot_seasonality_region():
 
 
 def plot_seanonality_reg_species(variables, ylabels):
-    fig, axs = plt.subplots(2, 3,
-                            figsize=(12, 6))  # 15,8
+    if global_vars.lat_arctic_lim == 63: # then do thesis plot
+        fig, axs = plt.subplots(3, 2,
+                                figsize=(10, 12))  # 15,8
+        id_ax = 3
+        font = 14
+    else:
+        fig, axs = plt.subplots(2, 3,
+                                figsize=(12, 6))  # 15,8
+        id_ax = 2
+        font = 12
+
     ax = axs.flatten()
 
     color_reg = ['k', 'r', 'm', 'pink',
@@ -291,13 +302,13 @@ def plot_seanonality_reg_species(variables, ylabels):
     xaxislabel = False
     for i in range(len(variables[0])):
         leg_list = []
-        if ylabels[i] == 'SST (C$^{o}$)':
+        if ylabels[i] == 'SST ($^{o}$C)':
             ff = 273.16
         else:
             ff = 0
 
         C_var = variables[0][i] - ff
-        if i > 2:
+        if i > id_ax:
             xaxislabel = True
 
         p2 = plot_seasons_reg(ax[i],
@@ -305,8 +316,13 @@ def plot_seanonality_reg_species(variables, ylabels):
                               color_reg,
                               mark,
                               ylabels[i],
+                              font,
                               botton_label=xaxislabel)
         leg_list.append(p2)
+        # ax[i].yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
+
+        # if global_vars.lat_arctic_lim == 63 and i > 2:
+        #     ax[i].set_yscale("log")
 
     titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
               r'$\bf{(c)}$', r'$\bf{(d)}$',
