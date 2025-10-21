@@ -17,6 +17,137 @@ def format_func(value, tick_number):
 
 font = 12
 
+def yearly_seasonality_arctic_and_reg(reg_data,variable):#, variable, mv
+    """ This function creates the four-panel plot of biomolecules and OMF seasonality for the Arctic and Arctic subregions
+    :returns None"""
+    fig, axs = plt.subplots(4, 3, figsize=(14, 12))  # 15,8
+    fig.suptitle(f'Arctic and Arctic subregions seasonality for {variable} \n',
+                 fontsize=font+2,
+                 weight='bold')
+    ax = axs.flatten()
+    fig.subplots_adjust(right=0.75)
+
+    cmap = plt.get_cmap('turbo')  # choose any cmap
+    colors = [tuple(c) for c in cmap(np.linspace(0.05, 0.95, 30))]  # avoid extreme ends
+    for idx, na in enumerate(reg_data.keys()):
+        print(na)
+        ax[idx].set_title(na,
+                          loc='center',
+                          fontsize=font,
+                          weight='bold')
+        if variable == 'SST ($^{o}$C)':
+            ff = 273.16
+        else:
+            ff = 0
+        C_conc = reg_data[na]- ff
+
+        year_list = C_conc.time.dt.year.values
+        month_list = C_conc.time.dt.month.values
+        C_conc_pd = pd.DataFrame({'values':C_conc, 'years': year_list, 'months': month_list})
+        C_conc_pd['years'] = C_conc_pd['years'].astype(str)
+
+        p1 = sns.lineplot(data=C_conc_pd,
+                     x = 'months',
+                     y = 'values',
+                     hue = 'years',
+                    palette = colors,
+                    linestyle='dashed',
+                    ax=ax[idx])
+        ax[idx].set_ylabel(f"Values", fontsize=font)
+        # ax[idx].set_ylim(0, mv)
+        ax[idx].set_xlim(1, 12)
+
+        ax[idx].yaxis.set_tick_params(labelsize=font)
+        ax[idx].xaxis.set_tick_params(labelsize=font)
+
+        ax[idx].set_xlabel("Months", fontsize=font)
+        ax[idx].get_legend().remove()
+
+    box = ax[0].get_position()
+    ax[0].set_position([box.x0, box.y0 + box.height * 0.1,
+                        box.width, box.height * 0.9])
+    handles, labels = ax[0].get_legend_handles_labels()
+    ax[-1].axis('off')
+
+    fig.legend(handles=handles,
+               labels=labels,
+               ncol=8,
+               bbox_to_anchor=(0.5, 0.),
+               loc='upper center',
+               fontsize=font)
+    fig.tight_layout()
+    plt.savefig(f'{global_vars.plot_dir}Yearly_monthly_poles_subregions_{variable}.png',
+                dpi=300,
+                bbox_inches="tight")
+    plt.close()
+
+
+def yearly_seasonality_arctic_and_reg_heatmap(reg_data, variable, norm_label=False):
+    """ This function creates the four-panel plot of biomolecules and OMF seasonality for the Arctic and Arctic subregions
+    :returns None"""
+    fig, axs = plt.subplots(3, 4,
+                            figsize=(20, 18))  # 15,8
+    if norm_label:
+        norm = ' normalized'
+    else:
+        norm = ''
+    fig.suptitle(f'Arctic and Arctic subregions seasonality for {variable}{norm} values \n',
+                 fontsize=font+2,
+                 weight='bold')
+    ax = axs.flatten()
+    fig.subplots_adjust(right=0.75)
+    yr = 'months_30_yr'
+
+    for idx, na in enumerate(reg_data.keys()):
+        print(na)
+        ax[idx].set_title(na,
+                          loc='center',
+                          fontsize=font,
+                          weight='bold')
+        if variable == 'SST ($^{o}$C)':
+            ff = 273.16
+        else:
+            ff = 0
+        C_conc = reg_data[na]- ff
+        C_min = C_conc.min().values
+        C_max = C_conc.max().values
+        if norm_label:
+            C_conc_norm = (C_conc.values - C_min) / (C_max - C_min)
+        else:
+            C_conc_norm = C_conc.values
+        year_list = C_conc.time.dt.year.values
+        month_list = C_conc.time.dt.month.values
+        C_conc_pd = pd.DataFrame({'values':C_conc_norm, 'years': year_list, 'months': month_list})
+        C_conc_pd['years'] = C_conc_pd['years'].astype(str)
+        C_conc_pd_sel = C_conc_pd[C_conc_pd['months']>3]
+        C_conc_pd_sel2 = C_conc_pd_sel[C_conc_pd_sel['months']<12]
+
+        C_conc_pd_piv = C_conc_pd_sel2.pivot(index='years',
+                                        columns='months',
+                                        values='values')
+        p1 = sns.heatmap(C_conc_pd_piv,
+                    annot=True,
+                    cmap = 'Reds',
+                    fmt='.1f',
+                    ax = ax[idx],
+                    linewidths = .5,)
+        ax[idx].set(xlabel='Months', ylabel='', )
+        ax[idx].set_xlabel('Months', fontsize=font)
+        p1.figure.axes[-1].tick_params(labelsize=font)
+        ax[idx].tick_params(labelsize=font)
+        p1.invert_yaxis()
+
+        # ax[idx].axis.tick_top()
+
+    ax[-1].axis('off')
+
+    fig.tight_layout()
+    plt.savefig(f'{global_vars.plot_dir}Yearly_monthly_poles_subregions_{variable}_heatmaps.png',
+                dpi=300,
+                bbox_inches="tight")
+    plt.close()
+
+
 
 def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, title, limits, pos, left_axis=False):
     print('starting plots')
@@ -184,6 +315,7 @@ def get_mean_reg(data_ds, gboxarea, var_type):
         reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals_gbx, weights, whole_arctic=True)
 
         print('finished computing reg. weights', reg_sel_vals_mean.time, '\n')
+        reg_data[reg_na]['data'] = reg_sel_vals_mean
         reg_data[reg_na]['values'] = reg_sel_vals_mean.groupby("time.month").mean(dim="time", skipna=True)
         reg_data[reg_na]['std'] = reg_sel_vals_mean.groupby("time.month").std(dim="time", skipna=True)
 
@@ -235,14 +367,16 @@ def seasonality_region_to_pickle_file(dict_seasonality):
 
 def data_df_new(data_df):
     reg_data = regions()
+    reg_all_data = regions()
     reg_data_std = regions()
     for idx, reg_na in enumerate(list(reg_data.keys())):
         reg_data[reg_na] = data_df[reg_na]['values']
         reg_data_std[reg_na] = data_df[reg_na]['std']
+        reg_all_data[reg_na] = data_df[reg_na]['data']
 
     df_reg_data = pd.DataFrame(reg_data)
     df_reg_data_std = pd.DataFrame(reg_data_std)
-    return [df_reg_data, df_reg_data_std]
+    return [df_reg_data, df_reg_data_std, reg_all_data]
 
 def plot_seasonality_region():
 
@@ -274,6 +408,20 @@ def plot_seasonality_region():
 
     var_values = [i[0] for i in variables]
     var_std = [i[1] for i in variables]
+    var_all_data = [i[2] for i in variables]
+
+    var_ids_heatmap = ['10m wind speed \n (m s${^{-1}}$)',
+                       'Open ocean fraction (%)',
+                       'SST ($^{o}$C)',
+                        'SS emission',
+                        'PCHO$_{aer}$+DCAA$_{aer}$ emission',
+                        'PL$_{aer}$ emission',
+                        ]
+    norm_labels = [False, False, False, True, True, True]
+
+    for idx,var_na in enumerate(var_ids):
+        yearly_seasonality_arctic_and_reg(var_all_data[idx],var_na)
+        yearly_seasonality_arctic_and_reg_heatmap(var_all_data[idx],var_ids_heatmap[idx], norm_label=norm_labels[idx])
 
     plot_seanonality_reg_species([var_values, var_std],
                                  var_ids)

@@ -6,6 +6,6 @@ import read_files
 # print('Calculate weighted average per region')
 # plot_seasonality.seasonality_region_to_pickle_file(dict_seasonality)
 # print('Done')
-# print('Read pickle files and create scatter plot')
+print('Read pickle files and create scatter plot')
 plot_seasonality.plot_seasonality_region()
 print('Done')
