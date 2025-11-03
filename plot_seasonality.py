@@ -1,6 +1,5 @@
 import pickle
 from matplotlib.ticker import FormatStrFormatter
-
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -211,41 +210,22 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
 def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_names, botton_label=True):
     t_ax = C_conc[0].index
     print(C_conc[0])
-    if len(mark) > 1 :
-        p2 = sns.lineplot(data=C_conc[0],
-                          # dashes=mark,
-                          palette=c,
-                          linewidth=1.5,
-                          ax = ax)
-        for ln, seq in zip(ax.get_lines(), mark):
-            if not seq:
-                ln.set_linestyle('solid')
-                ln.set_dashes(())
-            else:
-                ln.set_linestyle('solid')
-                ln.set_dashes(seq)
-        # from itertools import cycle
-        # for line, ls in zip(p2.get_lines(), mark):
-        #     print(ls)
-        #     line.set_linestyle(ls)
+    # if len(mark) > 1 :
+    p2 = sns.lineplot(data=C_conc[0],
+                      # dashes=mark,
+                      palette=c,
+                      linewidth=1.5,
+                      ax = ax)
+    for ln, seq in zip(ax.get_lines(), mark):
+        if not seq:
+            ln.set_linestyle('solid')
+            ln.set_dashes(())
+        else:
+            ln.set_linestyle('solid')
+            ln.set_dashes(seq)
 
-    else:
-        p2 = sns.lineplot(data=C_conc[0],
-                         palette=c,
-                         linewidth=1.5,
-                         # linestyle='dashed',
-                         ax = ax)
-        # lines = []
-        # for artist in p2.get_lines():  # Safe way
-        #     lines.append(artist)
-        # line_style = [line.get_linestyle() for line in lines]
-        # print(line_style)
 
     for i, region in enumerate(reg_names):
-        # ymin = [C_conc[0][region][i]-C_conc[1][region][i]  for i in range(len(C_conc[0][region]))]
-        # ymin = np.clip(ymin, np.min(C_conc[0][region]), None)
-        # yerr = [C_conc[0][region] - ymin, C_conc[1][region]],
-        #
         ax.errorbar(
             t_ax,
             C_conc[0][region],
@@ -476,11 +456,7 @@ def plot_seanonality_reg_species(variables, ylabels):
     ax = axs.flatten()
 
 
-    color_reg = ['k', 'r', 'm', 'pink',
-                 'lightgreen', 'darkblue', 'orange',
-                 'brown', 'lightblue', 'y', 'gray']
-    mark = ['__' for i in range(len(color_reg)-1)]
-    mark.insert(0, '_')
+    _, color_reg, linestyle = utils.line_style_regions()
 
     xaxislabel = False
     for i in range(len(variables[0])):
@@ -497,7 +473,7 @@ def plot_seanonality_reg_species(variables, ylabels):
         p2 = plot_seasons_reg(ax[i],
                               [C_var, variables[1][i]],
                               color_reg,
-                              [],
+                              linestyle,
                               ylabels[i],
                               font,
                               C_var.columns,
@@ -572,11 +548,7 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
     ax2 = axes[1, :]  # third row, 3 axes
     ax3 = axes[2, :]  # fourth row, 3 axes
 
-    color_reg = ['k', 'r', 'm', 'pink',
-                 'lightgreen', 'darkblue', 'orange',
-                 'brown', 'lightblue', 'y', 'gray']
-    mark = ['__' for i in range(len(color_reg)-1)]
-    mark.insert(0, '_')
+    _, color_reg, linestyle = utils.line_style_regions()
 
     xaxislabel = False
     for i in range(len(variables[0][:3])):
@@ -591,7 +563,7 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
         p2 = plot_seasons_reg(ax[i],
                               [C_var, variables[1][i]],
                               color_reg,
-                              [],
+                              linestyle,
                               ylabels[i],
                               font,
                               C_var.columns,
@@ -608,33 +580,32 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
     factors = [1.e1, 1.e4, 1e2]
     factors_lab = ['10$^{-1}$', '10$^{-4}$', '10$^{-2}$']
 
-    color_reg_sel = ['k', 'r', 'y',]
-    lines = []
-    # print(p2)
-    # for artist in p2.get_lines():  # Safe way
-    #     lines.append(artist)
-    # line_style = [line.get_linestyle() for line in lines]
-    # # line_style = ['solid', 'dashed', 'dashdotdotted']
-    line_style = [
-        None,  # Arctic — solid
-        [9, 3.5],  # Barents Sea — long dash
-        [1, 2.4],  # Kara Sea — fine dotted
-        [4.5, 1.2, 1.0, 1.2],  # Greenland & Norwegian Sea — short dash-dot (yellow)
-                    ]
-    # mark_sel = [line_style[0], line_style[1], line_style[-2]]
-    region_sel = ['Arctic', 'Barents Sea', 'Greenland & Norwegian Sea']
+    reg_style_dict, _, _ = utils.line_style_regions()
+    color_reg_sel1, color_reg_sel2 = [], []
+    line_style1, line_style2 = [], []
+    region_sel1, region_sel2   = [], []
+    for reg in list(reg_style_dict.keys()):
+        if reg == 'Arctic' or reg == 'Barents Sea' or reg == 'Greenland & Norwegian Sea':
+            region_sel1.append(reg)
+            color_reg_sel1.append(reg_style_dict[reg]['color'])
+            line_style1.append(reg_style_dict[reg]['linestyle'])
+        else:
+            region_sel2.append(reg)
+            color_reg_sel2.append(reg_style_dict[reg]['color'])
+            line_style2.append(reg_style_dict[reg]['linestyle'])
+
     for i in range(len(variables[0][3:])):
         C_var = variables[0][i+3]*factors[i]
-        C_sel = C_var[region_sel]
+        C_sel = C_var[region_sel1]
         # C_sel['line_style'] = mark_sel
-        C_sel_std = variables[1][i+3][region_sel]*factors[i]
+        C_sel_std = variables[1][i+3][region_sel1]*factors[i]
         p2 = plot_seasons_reg(ax2[i],
                               [C_sel, C_sel_std],
-                              color_reg_sel,
-                              line_style,
+                              color_reg_sel1,
+                              line_style1,
                               ylabels[i+3],
                               font,
-                                region_sel,
+                              region_sel1,
                               botton_label=xaxislabel)
         ax2[i].grid(linestyle='--',
                  linewidth=0.4)
@@ -643,41 +614,20 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
 
         # ax2[i].xaxis.set_ticks([])
 
-    color_reg = ['m', 'pink',
-                 'lightgreen', 'darkblue', 'orange',
-                 'brown', 'lightblue', 'gray']
-    regions = list(utils.regions().keys())
-    regions.remove('Arctic')
-    regions.remove('Barents Sea')
-    regions.remove('Greenland & Norwegian Sea')
-
-    # line_style.remove(line_style[0])
-    # line_style.remove(line_style[1])
-    # line_style.remove(line_style[-2])
-    line_style = [
-        [1, 2.4],  # Kara Sea — fine dotted
-        [3, 1.5],  # Laptev Sea — short dash
-        [4.5, 1.5, 1.0, 1.5],  # East-Siberian Sea — tight dash-dot
-        [6, 2.0, 1.2, 2.0],  # Chukchi Sea — medium dash-dot
-        [8, 2.5, 1.5, 2.5],  # Beaufort Sea — long dash-dot
-        [4.5, 1.8, 1.0, 1.8],  # Canadian Archipelago — compact dash-dot
-        [1.2, 2.6],  # Baffin Bay — dotted
-        [3.2, 2.0],  # Central Arctic — short dashed (gray, not solid)
-    ]
 
     for i in range(len(variables[0][3:])):
         xaxislabel = True
         C_var = variables[0][i+3]
-        C_sel = C_var[regions]*factors[i]
+        C_sel = C_var[region_sel2]*factors[i]
         # C_sel['line_style'] = line_style
-        C_sel_std = variables[1][i+3][regions]*factors[i]
+        C_sel_std = variables[1][i+3][region_sel2]*factors[i]
         p2 = plot_seasons_reg(ax3[i],
                               [C_sel, C_sel_std],
-                              color_reg,
-                              line_style,
+                              color_reg_sel2,
+                              line_style2,
                               ylabels[i+3],
                               font,
-                                regions,
+                              region_sel2,
                               botton_label=xaxislabel)
         ax3[i].grid(linestyle='--',
                  linewidth=0.4)

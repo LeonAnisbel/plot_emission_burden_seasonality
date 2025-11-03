@@ -91,6 +91,30 @@ def regions():
     return reg_data
 
 
+def line_style_regions():
+    color_reg = ['k', 'r', 'm', 'pink',
+                 'lightgreen', 'darkblue', 'orange',
+                 'brown', 'lightblue', 'y', 'gray']
+    line_styles = [
+        [1.0, 0.0],  # solid
+        [5.0, 2.0],  # long dash
+        [2.0, 2.0],  # dotted
+        [4.0, 2.0, 1.0, 2.0],  # dash-dot
+        [3.0, 1.0, 1.0, 1.0],  # dash-dot-dot
+        [8.0, 2.0, 2.0, 2.0],  # long dash + dots
+        [1.0, 1.0],  # dense dots
+        [6.0, 1.0, 1.0, 1.0],  # long-short pattern
+        [2.0, 3.0, 1.0, 3.0],  # spaced dots
+        [5.0, 1.0, 2.0, 1.0],  # alternating dashes
+        [7.0, 3.0, 2.0, 3.0],  # long dash–dot pattern
+    ]
+    reg_style_dict = regions()
+    for i, reg in enumerate(list(reg_style_dict.keys())):
+        reg_style_dict[reg]['color'] = color_reg[i]
+        reg_style_dict[reg]['linestyle'] = line_styles[i]
+    return reg_style_dict, color_reg, line_styles
+
+
 def get_var_reg(v, cond):
     if len(cond) <= 1:
         v = v.where((cond[0][0] > cond[0][1]) &
