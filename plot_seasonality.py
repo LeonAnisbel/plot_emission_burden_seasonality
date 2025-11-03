@@ -9,6 +9,8 @@ import utils
 from utils import get_var_reg, regions, get_conds
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
+
 
 def format_func(value, tick_number):
     N = int(value + 1)
@@ -206,15 +208,44 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
                bbox_to_anchor=(0.94, 1))
 
 
-def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_gray_line=False, botton_label=True):
+def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_names, botton_label=True):
     t_ax = C_conc[0].index
     print(C_conc[0])
-    p2 = sns.lineplot(data=C_conc[0],
-                     palette=c,
-                     linewidth=1.5,
-                     linestyle='dashed',
-                     ax = ax)
-    for i, region in enumerate(C_conc[0].columns):
+    if len(mark) > 1 :
+        p2 = sns.lineplot(data=C_conc[0],
+                          # dashes=mark,
+                          palette=c,
+                          linewidth=1.5,
+                          ax = ax)
+        for ln, seq in zip(ax.get_lines(), mark):
+            if not seq:
+                ln.set_linestyle('solid')
+                ln.set_dashes(())
+            else:
+                ln.set_linestyle('solid')
+                ln.set_dashes(seq)
+        # from itertools import cycle
+        # for line, ls in zip(p2.get_lines(), mark):
+        #     print(ls)
+        #     line.set_linestyle(ls)
+
+    else:
+        p2 = sns.lineplot(data=C_conc[0],
+                         palette=c,
+                         linewidth=1.5,
+                         # linestyle='dashed',
+                         ax = ax)
+        # lines = []
+        # for artist in p2.get_lines():  # Safe way
+        #     lines.append(artist)
+        # line_style = [line.get_linestyle() for line in lines]
+        # print(line_style)
+
+    for i, region in enumerate(reg_names):
+        # ymin = [C_conc[0][region][i]-C_conc[1][region][i]  for i in range(len(C_conc[0][region]))]
+        # ymin = np.clip(ymin, np.min(C_conc[0][region]), None)
+        # yerr = [C_conc[0][region] - ymin, C_conc[1][region]],
+        #
         ax.errorbar(
             t_ax,
             C_conc[0][region],
@@ -309,10 +340,10 @@ def get_mean_reg(data_ds, gboxarea, var_type):
         _, weights = utils.get_weights_pole(mod_dir, exp, '201001', reg_sel_vals_gba)
         if var_type == 'emi':
             reg_sel_vals_gbx = reg_sel_vals * reg_sel_vals_gba # Tg/month/m2 to Tg/month
-            # reg_sel_vals_mean = reg_sel_vals_gbx.sum(dim=['lat', 'lon'], skipna=True)
+            reg_sel_vals_mean = reg_sel_vals_gbx.sum(dim=['lat', 'lon'], skipna=True)
         else:
             reg_sel_vals_gbx = reg_sel_vals
-        reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals_gbx, weights, whole_arctic=True)
+            reg_sel_vals_mean = utils.get_lalo_mean_pole(reg_sel_vals_gbx, weights, whole_arctic=True)
 
         print('finished computing reg. weights', reg_sel_vals_mean.time, '\n')
         reg_data[reg_na]['data'] = reg_sel_vals_mean
@@ -383,14 +414,14 @@ def plot_seasonality_region():
     var_ids = ['10m wind speed \n (m s${^{-1}}$)',
                'Open ocean fraction (%)',
                'SST ($^{o}$C)',
-               'SS emission\n (10$^{-3}$ Tg month$^{-1}$)',
-               'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (10$^{-6}$ Tg month$^{-1}$)',
-               'PL$_{aer}$ emission \n (10$^{-5}$ Tg month$^{-1}$)',
+               'SS emission\n (Tg month$^{-1}$)',
+               'PCHO$_{aer}$+DCAA$_{aer}$ emission\n (Tg month$^{-1}$)',
+               'PL$_{aer}$ emission \n (Tg month$^{-1}$)',
                ]
 
-    emi_lip = read_pkl_files('emi_LIP') * 1e5
-    emi_pol_pro = read_pkl_files('emi_POL_PRO') * 1e6
-    emi_ss = read_pkl_files('emi_SS') * 1e3
+    emi_lip = read_pkl_files('emi_LIP') #* 1e5
+    emi_pol_pro = read_pkl_files('emi_POL_PRO')# * 1e6
+    emi_ss = read_pkl_files('emi_SS') #* 1e3
     seaice = read_pkl_files('open_ocean_frac')
     sst = read_pkl_files('sst')
     wind = read_pkl_files('veloc10m')
@@ -423,8 +454,11 @@ def plot_seasonality_region():
         yearly_seasonality_arctic_and_reg(var_all_data[idx],var_na)
         yearly_seasonality_arctic_and_reg_heatmap(var_all_data[idx],var_ids_heatmap[idx], norm_label=norm_labels[idx])
 
-    plot_seanonality_reg_species([var_values, var_std],
+    plot_seanonality_reg_species_acp_plot([var_values, var_std],
                                  var_ids)
+    # plot_seanonality_reg_species([var_values, var_std],
+    #                              var_ids)
+
 
 
 def plot_seanonality_reg_species(variables, ylabels):
@@ -433,13 +467,14 @@ def plot_seanonality_reg_species(variables, ylabels):
                                 figsize=(10, 12))  # 15,8
         id_ax = 3
         font = 14
+
     else:
         fig, axs = plt.subplots(2, 3,
                                 figsize=(12, 6))  # 15,8
-        id_ax = 2
+        id_ax = 7
         font = 12
-
     ax = axs.flatten()
+
 
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
@@ -462,15 +497,16 @@ def plot_seanonality_reg_species(variables, ylabels):
         p2 = plot_seasons_reg(ax[i],
                               [C_var, variables[1][i]],
                               color_reg,
-                              mark,
+                              [],
                               ylabels[i],
                               font,
+                              C_var.columns,
                               botton_label=xaxislabel)
         leg_list.append(p2)
-        # ax[i].yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
+        ax[i].yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
 
-        # if global_vars.lat_arctic_lim == 63 and i > 2:
-        #     ax[i].set_yscale("log")
+        if global_vars.lat_arctic_lim == 66 and i > 2:
+            ax[i].set_yscale("log")
 
     titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
               r'$\bf{(c)}$', r'$\bf{(d)}$',
@@ -506,4 +542,193 @@ def plot_seanonality_reg_species(variables, ylabels):
     plt.savefig(global_vars.plot_dir + 'Multiannual_monthly_seasonality_subregions_emission_sic_sst.png',
                 dpi=300,
                 bbox_inches="tight")
+    plt.close()
+
+
+def format_func(value, tick_number):
+    N = int(value + 1)
+    return N
+
+
+def plot_seanonality_reg_species_acp_plot(variables, ylabels):
+    id_ax = 7
+    font = 14
+    height_ratios = [1., 0.7, 0.7]
+
+    fig, axes = plt.subplots(
+        nrows=3, ncols=3,
+        figsize=(14, 10),  # wider for 3 columns
+        gridspec_kw={
+            'height_ratios': height_ratios,
+            # 'hspace': 0.1,  # vertical spacing
+            # 'wspace': 0.5  # horizontal spacing
+
+        },
+        sharex=True,  # optional, but usually helpful
+        # constrained_layout=True
+    )
+    # Row groups you can use:
+    ax = axes[0, :]  # top row, 3 axes
+    ax2 = axes[1, :]  # third row, 3 axes
+    ax3 = axes[2, :]  # fourth row, 3 axes
+
+    color_reg = ['k', 'r', 'm', 'pink',
+                 'lightgreen', 'darkblue', 'orange',
+                 'brown', 'lightblue', 'y', 'gray']
+    mark = ['__' for i in range(len(color_reg)-1)]
+    mark.insert(0, '_')
+
+    xaxislabel = False
+    for i in range(len(variables[0][:3])):
+        leg_list = []
+        if ylabels[i] == 'SST ($^{o}$C)':
+            ff = 273.16
+        else:
+            ff = 0
+
+        C_var = variables[0][i] - ff
+
+        p2 = plot_seasons_reg(ax[i],
+                              [C_var, variables[1][i]],
+                              color_reg,
+                              [],
+                              ylabels[i],
+                              font,
+                              C_var.columns,
+                              botton_label=xaxislabel)
+        leg_list.append(p2)
+        ax[i].grid(linestyle='--',
+                 linewidth=0.4)
+        ax[i].xaxis.set_tick_params(labelsize=font)
+        ax[i].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+
+        ax[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
+
+
+    factors = [1.e1, 1.e4, 1e2]
+    factors_lab = ['10$^{-1}$', '10$^{-4}$', '10$^{-2}$']
+
+    color_reg_sel = ['k', 'r', 'y',]
+    lines = []
+    # print(p2)
+    # for artist in p2.get_lines():  # Safe way
+    #     lines.append(artist)
+    # line_style = [line.get_linestyle() for line in lines]
+    # # line_style = ['solid', 'dashed', 'dashdotdotted']
+    line_style = [
+        None,  # Arctic — solid
+        [9, 3.5],  # Barents Sea — long dash
+        [1, 2.4],  # Kara Sea — fine dotted
+        [4.5, 1.2, 1.0, 1.2],  # Greenland & Norwegian Sea — short dash-dot (yellow)
+                    ]
+    # mark_sel = [line_style[0], line_style[1], line_style[-2]]
+    region_sel = ['Arctic', 'Barents Sea', 'Greenland & Norwegian Sea']
+    for i in range(len(variables[0][3:])):
+        C_var = variables[0][i+3]*factors[i]
+        C_sel = C_var[region_sel]
+        # C_sel['line_style'] = mark_sel
+        C_sel_std = variables[1][i+3][region_sel]*factors[i]
+        p2 = plot_seasons_reg(ax2[i],
+                              [C_sel, C_sel_std],
+                              color_reg_sel,
+                              line_style,
+                              ylabels[i+3],
+                              font,
+                                region_sel,
+                              botton_label=xaxislabel)
+        ax2[i].grid(linestyle='--',
+                 linewidth=0.4)
+        ax2[i].set_ylabel(' \n ')
+        ax2[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
+
+        # ax2[i].xaxis.set_ticks([])
+
+    color_reg = ['m', 'pink',
+                 'lightgreen', 'darkblue', 'orange',
+                 'brown', 'lightblue', 'gray']
+    regions = list(utils.regions().keys())
+    regions.remove('Arctic')
+    regions.remove('Barents Sea')
+    regions.remove('Greenland & Norwegian Sea')
+
+    # line_style.remove(line_style[0])
+    # line_style.remove(line_style[1])
+    # line_style.remove(line_style[-2])
+    line_style = [
+        [1, 2.4],  # Kara Sea — fine dotted
+        [3, 1.5],  # Laptev Sea — short dash
+        [4.5, 1.5, 1.0, 1.5],  # East-Siberian Sea — tight dash-dot
+        [6, 2.0, 1.2, 2.0],  # Chukchi Sea — medium dash-dot
+        [8, 2.5, 1.5, 2.5],  # Beaufort Sea — long dash-dot
+        [4.5, 1.8, 1.0, 1.8],  # Canadian Archipelago — compact dash-dot
+        [1.2, 2.6],  # Baffin Bay — dotted
+        [3.2, 2.0],  # Central Arctic — short dashed (gray, not solid)
+    ]
+
+    for i in range(len(variables[0][3:])):
+        xaxislabel = True
+        C_var = variables[0][i+3]
+        C_sel = C_var[regions]*factors[i]
+        # C_sel['line_style'] = line_style
+        C_sel_std = variables[1][i+3][regions]*factors[i]
+        p2 = plot_seasons_reg(ax3[i],
+                              [C_sel, C_sel_std],
+                              color_reg,
+                              line_style,
+                              ylabels[i+3],
+                              font,
+                                regions,
+                              botton_label=xaxislabel)
+        ax3[i].grid(linestyle='--',
+                 linewidth=0.4)
+        ax3[i].xaxis.set_tick_params(labelsize=font)
+        ax3[i].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        ax3[i].set_ylabel('\n ')
+        ax3[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
+
+    titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
+              r'$\bf{(c)}$', r'$\bf{(d)}$',
+              r'$\bf{(e)}$', r'$\bf{(f)}$']
+    ax13 = list(ax)+ list(ax3)
+
+    ax12 = list(ax)+ list(ax2)
+    for i, axs in enumerate(ax12):
+        axs.set_title(titles[i],
+                      loc='right',
+                      fontsize=font)
+
+    ax123 = list(ax)+ list(ax2) + list(ax3)
+    for a, b, c in zip(ax, ax2, ax3):
+        a.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
+        b.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
+        c.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
+    #
+    # box = ax3[0].get_position()
+    # ax3[0].set_position([box.x0, box.y0 + box.height * 0.1,
+    #                      box.width, box.height * 0.9])
+    fig.text(0.025, 0.17,
+             f'SS emission ({factors_lab[0]}'+' Tg month$^{-1}$)',
+             fontsize=font,
+             rotation=90)
+    fig.text(0.36, 0.11,
+             'PCHO$_{aer}$+DCAA$_{aer}$ emission ('+f'{factors_lab[1]}'+' Tg month$^{-1}$)',
+             fontsize=font,
+             rotation=90)
+    fig.text(0.68, 0.16,
+             'PL$_{aer}$ emission ('+f'{factors_lab[2]}'+' Tg month$^{-1}$)',
+             fontsize=font,
+             rotation=90)
+
+    handles, labels = ax[0].get_legend_handles_labels()
+
+    fig.legend(handles=handles,
+               labels= labels,
+               ncol=3,
+               bbox_to_anchor=(0.5, 0.),
+               loc='upper center',
+               fontsize=font)
+    fig.tight_layout()
+
+    plt.savefig(global_vars.plot_dir + 'Multiannual_monthly_seasonality_subregions_emission_sic_sst_acp_plot.png',
+                dpi=300,  bbox_inches='tight')
     plt.close()
