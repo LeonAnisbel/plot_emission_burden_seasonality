@@ -3,12 +3,11 @@ import cartopy.crs as ccrs
 import cartopy
 import matplotlib.colors as mcolors
 import numpy as np
-from matplotlib import ticker, cm
-from matplotlib.ticker import FuncFormatter, FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter
 import global_vars
 import matplotlib.path as mpath
 from matplotlib import ticker as mticker
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 import cartopy.feature as cfeature
 import matplotlib.colors as mplcolors
 
@@ -18,10 +17,24 @@ import utils
 
 
 def create_fig(h, w):
+    """
+    Creates figure given the height and width parameters
+    :param h: height of the figure
+    :param w: width of the figure
+    :return: figure instance
+    """
     return plt.figure(constrained_layout=True, figsize=(h, w))
 
 
 def customize_axis(ax, titles, polar_proj, plot_diff=False):
+    """
+    Customize map
+    :param ax: ax object
+    :param titles: list with upper title labels
+    :param polar_proj: boolean to discern whether to customize a polar projection plot
+    :param plot_diff: boolean to discern whether to plot the 15-year difference
+    :return: None
+    """
     if plot_diff or not polar_proj:
         font = '16'
     else:
@@ -67,6 +80,14 @@ def customize_axis(ax, titles, polar_proj, plot_diff=False):
 
 
 def add_ice_colorbar(fig, ic, ff, plot_ice=True):
+    """
+    Adds ice color bar to figure
+    :param fig:
+    :param ic: plot instance
+    :param ff: fontsize of colorbar labels
+    :param plot_ice: boolean to plot ice colorbar or not
+    :return:
+    """
     if plot_ice:
         cbar_ax = fig.add_axes([0.43, -0.05, 0.15, 0.02])
         ic_bar = fig.colorbar(ic, extendfrac='auto',
@@ -83,6 +104,17 @@ def add_ice_colorbar(fig, ic, ff, plot_ice=True):
 
 
 def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
+    """
+    Plots moa data and customize axis
+    :param subfig:
+    :var moa: dataArray as a temporal mean with lat and lon dimensions
+    :param titles: figure titles
+    :param unit: unit to display at colorbar
+    :param vm: max value for colorbar
+    :param colorb: color bar style
+    :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :return: None
+    """
     if polar_proj:
         axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
                                subplot_kw={'projection': ccrs.NorthPolarStereo()})
@@ -112,6 +144,15 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
 
 
 def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=False):
+    """
+    Creates two-panel plot of global emission flux and burden of total PMOA
+    :var moa_emi: temporally averaged PMOA emission flux
+    :var moa_burden: temporally averaged PMOA burden flux
+    :param var: variable id
+    :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :param thirty_yrs: boolean to discern whether it is a 10-year or 30-year mean (important to define figure name)
+    :return: None
+    """
     fig = create_fig(10, 7)
 
     (subfig1, subfig2) = fig.subfigures(nrows=1, ncols=2)
@@ -138,6 +179,15 @@ def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=
 
 
 def plot_emi_burden_maps_vert_profile(moa_emi, moa_burden, moa_conc, var, polar_proj=False, thirty_yrs=False):
+    """
+    Creates a figure of global emission flux and burden of total PMOA as well as vertical cross-section
+    :var moa_emi: temporally averaged PMOA emission flux
+    :var moa_burden: temporally averaged PMOA burden flux
+    :param var: variable id
+    :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :param thirty_yrs: boolean to discern whether it is a 10-year or 30-year mean (important to define figure name)
+    :return: None
+    """
     fig = create_fig(7, 7)
 
     subfigs = fig.subfigures(nrows=2, ncols=1, height_ratios=[2, 1])
@@ -188,6 +238,14 @@ def plot_emi_burden_maps_vert_profile(moa_emi, moa_burden, moa_conc, var, polar_
 
 
 def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
+    """
+    Creates figure of meteorological variables influencing emissions
+    :var var: dataArray with temporally averaged values
+    :param var: variable id
+    :param fig_na: figure name
+    :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :return: None
+    """
     fig = create_fig(10, 7)
 
     (subfig1, subfig2), (subfig3, subfig4) = fig.subfigures(nrows=2, ncols=2)
@@ -203,7 +261,25 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
     plt.savefig(global_vars.plot_dir + f'{fig_na}{var_id}.png', dpi=300, bbox_inches="tight")
 
 
-def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name, lower=False, polar_proj=True, plot_ice=True, plot_diff=False):
+def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
+                    lower=False, polar_proj=True, plot_ice=True, plot_diff=False):
+    """
+    Creates the subplot or subplots for each subfigure
+    :param subfig: subfigure instance
+    :var moa: list of dataArray with temporally averaged values (lat, lon dimensions)
+    :var ice: list of dataArray with temporally averaged values (lat, lon dimensions)
+    :param titles: list of titles
+    :param unit: units for colorbar
+    :param vma: max values for colorbar
+    :param colorb: colorbar style
+    :param sh: shrink factor for colorbar
+    :param name:
+    :param lower: boolean to discern whether this is a bottom panel
+    :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :param plot_ice: boolean to plot ice colorbar or not
+    :param plot_diff: boolean to discern whether to plot the 15-year difference
+    :return: return plot instance if plot_ice or None if not
+    """
     if plot_diff: col = 2
     else: col = 1
 
@@ -294,6 +370,18 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name, lower
 
 
 def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_id, title, var, plot_ice=True):
+    """
+    Creates figure of seasonal emission maps
+    :var moa_emi_summer: list of PMOA species emission for summer
+    :var moa_emi_winter: list of PMOA species emission for winter
+    :var ice_summer: ice concentration for summer
+    :var ice_winter: ice concentration for summer
+    :param var_id: ID of variable type
+    :param title: subplot title
+    :param var: var indicating whether this is an emission or emission driver
+    :param plot_ice: boolean to plot ice colorbar or not
+    :return: None
+    """
     fig = create_fig(12, 8)  # layout='constrained',constrained_layout=True
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6) = fig.subfigures(nrows=2,
@@ -347,6 +435,16 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
 
 
 def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=False):
+    """
+    Creates figure of difference of 15yr emission maps (2005-2019 - 1990-2004) for all PMOA species.
+    :var moa_emi: list of emission datasets for winter and summer.
+    :var moa_burden: list of burden datasets for winter and summer.
+    :var moa_wdep: list of wet deposition datasets for winter and summer.
+    :var seaice: sea ice dataArray for winter and summer.
+    :param title: title of the subplots
+    :param plot_ice: boolean to plot ice colorbar or not
+    :return: None
+    """
     fig = plt.figure(figsize=(14, 11))
 
     (subfig1, subfig2, subfig3), (subfig4, subfig5, subfig6), (subfig7, subfig8, subfig9)  = fig.subfigures(nrows=3,
@@ -438,9 +536,15 @@ def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=
 
 
 
-
-
 def plot_omf_emi_wind_sst_season(variables, ice, title, var_id):
+    """
+    Creates multi-panel figure of
+    :var variables: list of temporally variable dataArray
+    :var ice: dataset of temporally sea ice concentration
+    :param title: title of the subplots
+    :param var_id: ID of variable type
+    :return: None
+    """
     fig = create_fig(10, 10)  # layout='constrained'
 
     (subfig1, subfig2), (subfig3, subfig4) = fig.subfigures(nrows=2, ncols=2,
@@ -475,7 +579,12 @@ def plot_omf_emi_wind_sst_season(variables, ice, title, var_id):
 
 
 def plot_global_average_maps(thirty_yrs):
-    ### Plotting wind speed and
+    """
+    Creates figures of temporally averaged emission flux and burden of total PMOA
+    :param thirty_yrs: boolean to discern whether it is a 10-year or 30-year mean (important to define figure name)
+    :return: None
+    """
+    ### Plotting wind speed and SS
 
     # wind, precipitation, emi_ss, burden_ss = read_files.read_wind_prec_emi_ss(thirty_yrs=thirty_yrs)
     # plot_maps.plot_wind_prep_emi_burden_global(read_files.read_wind_prec_emi_ss(), 'wind',
@@ -512,6 +621,13 @@ def plot_global_average_maps(thirty_yrs):
                                    thirty_yrs=thirty_yrs)
 
 def calculate_diff(season, var, fac):
+    """
+    Computes the 15-year difference
+    :param season:
+    :param var:
+    :param fac:
+    :return:
+    """
     years_names = ['1990-2004', '2005-2019', '1990-2019']
     den = data_dict[years_names[0]][season][var]* fac
     diff = (data_dict[years_names[1]][season][var] * fac -
@@ -520,6 +636,7 @@ def calculate_diff(season, var, fac):
 
 
 if __name__ == '__main__':
+
         # plot_maps.plot_omf_emi_wind_sst_season([omf_tot[0],
         #                                         emi_ss[0]['emi_SS']*fac/1e3,
         #                                         wind[0]['velo10m'],
@@ -547,35 +664,36 @@ if __name__ == '__main__':
         #                           plot_ice=False)
 
 
-    # file_name = global_vars.pkl_file_title
-    # data_dict = plot_seasonality.read_pkl_files(file_name)
+    # Uncomment this section to create seasonal Arctic plots of marine species
+    file_name = global_vars.pkl_file_title
+    data_dict = plot_seasonality.read_pkl_files(file_name)
     fac = global_vars.factor_kg_to_ng
 
- #     data_dict_yr = data_dict['1990-2019']
-#     emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
-#     emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
-#     ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
-#
-#     print('Done')
-#     print('Calculate Arctic average values')
-#
-#     print()
-#     utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
-#     utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
-#
-#     utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
-#     utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
-#
-#
-#     plot_emi_season(emi_moa[0] * fac,
-#                       emi_moa[1] * fac,
-#                       ice[0]  ,
-#                       ice[1] ,
-#                       'emi',
-#                       'Surface_emission_flux_'+file_name,
-#                       'MOA')
-# # #
+    data_dict_yr = data_dict['1990-2019']
+    emi_moa = [data_dict_yr['summer']['emi_moa'], data_dict_yr['winter']['emi_moa'] ]
+    emi_ss = [data_dict_yr['summer']['emi_SS'], data_dict_yr['winter']['emi_SS']]
+    ice = [data_dict_yr['summer']['ice'], data_dict_yr['winter']['ice'] ]
 
+    print('Done')
+    print('Calculate Arctic average values')
+
+    print()
+    utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
+    utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
+
+    utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
+    utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
+
+
+    plot_emi_season(emi_moa[0] * fac,
+                      emi_moa[1] * fac,
+                      ice[0]  ,
+                      ice[1] ,
+                      'emi',
+                      'Surface_emission_flux_'+file_name,
+                      'MOA')
+
+    # Plot the difference between the periods 1990-2004 and 2005-2019 for emission, wet deposition and burden
     file_name = global_vars.pkl_file_title + '_15_years_aver'
     data_dict = plot_seasonality.read_pkl_files(file_name)
 

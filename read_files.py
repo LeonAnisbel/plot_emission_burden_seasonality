@@ -9,6 +9,11 @@ import utils
 
 
 def read_tot_moa_emi_burden(thirty_yrs=False):
+    """
+    Read total burden and total emissions already calculated with cdo
+    :param thirty_yrs: boolean to discern whether it is a 10-year or 30-year mean
+    :return: dataArray of total emission, total burden and PMOA concentration
+    """
     f_id = global_vars.files_id_10yr
     data_dir = global_vars.project_dir_glb + '2009_2019/'
     if thirty_yrs:
@@ -34,6 +39,11 @@ def read_tot_moa_emi_burden(thirty_yrs=False):
 
 
 def read_wind_prec_emi_ss(thirty_yrs=False):
+    """
+    Read total SS emission and burden  already calculated with cdo, also wind  emissions
+    :param thirty_yrs: boolean to discern whether it is a 10-year or 30-year mean
+    :return: datasets of total emission and burden of SS, as well as wind and precipitation
+    """
     data_dir = global_vars.project_dir
     f_id = global_vars.files_id_10yr
     if thirty_yrs:
@@ -49,6 +59,13 @@ def read_wind_prec_emi_ss(thirty_yrs=False):
 
 
 def  sel_time(data, month, year):
+    """
+    Extracts the dataArray for the selected month and year range
+    :var data: dataArray with time dimension
+    :var month: list of months to select
+    :var year: list of min and max years to filter the data
+    :return: dataArray with months as time coordinate
+    """
     data_yr = data.where((data.time.dt.year >= year[0]) &
                       (data.time.dt.year <= year[-1]), drop=True)
     da_m_list = []
@@ -61,6 +78,15 @@ def  sel_time(data, month, year):
 
 
 def sel_var_season(ds, season, months, year, isice=False):
+    """
+    Computes temporal mean of dataset
+    :var ds: dataset with time dimension
+    :param season:
+    :var months: list of months to select
+    :var year: list of min and max years to filter the data
+    :param isice: boolean to identify if the data refers to sea ice
+    :return: dataset with months as time coordinate
+    """
     ds_season = sel_time(ds, months, year)
     season_mean = ds_season.mean(dim='time',
                                  skipna=True)
@@ -74,9 +100,22 @@ def sel_var_season(ds, season, months, year, isice=False):
 
 
 def read_emi_ice_files(sum_mo, win_mo, year, file_type1, emi_var, file_type2, atm_var, exp_idx, isice=False):
+    """
+    This function reads the data from a certain file type
+    :param sum_mo: list of summer months to select
+    :param win_mo: list of winter months to select
+    :var year: list of min and max years to filter the data
+    :param file_type1: string with emission alias for file name
+    :param emi_var: string with emission variable alias
+    :param file_type2: string with atmosphere alias for file name
+    :param atm_var: string with atmosphere variable alias
+    :param exp_idx: specifies the experiment id (see global_vars.py)
+    :param isice: boolean to identify if the data refers to sea ice
+    :return: dataset with seasonal values of emission and ice concentration
+    (emi_summer, emi_winter, ice_summer, ice_winter)
+    """
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
-    print('FILESSSSS', mod_dir + exp + f'*01_{file_type1}.nc')
     files1 = glob.glob(mod_dir + exp + f'*01_{file_type1}.nc')
     files2 = glob.glob(mod_dir + exp + f'*01_{file_type2}.nc')
 
@@ -104,6 +143,12 @@ def read_emi_ice_files(sum_mo, win_mo, year, file_type1, emi_var, file_type2, at
     return emi_ds_summer, emi_ds_winter, ice_ds_summer, ice_ds_winter
 
 def read_nc_file(files, var):
+    """
+    This function reads (with dask) the data from a certain file type
+    :param files: files to read
+    :param var: selected variable to load
+    :return: dataset
+    """
     ds = xr.open_mfdataset(files,
                            concat_dim='time',
                            combine='nested',
@@ -111,7 +156,15 @@ def read_nc_file(files, var):
                            ds[var])
     return ds
 
-def read_individual_month(var, file_type, month, exp_idx, isice=False):
+def read_individual_month(var, file_type, month, exp_idx):
+    """
+    Reads data and groups it monthly to compute multiannual mean
+    :param var: selected variable to load
+    :param file_type: string with alias for file name
+    :var months: list of months to select
+    :param exp_idx: specifies the experiment id (see global_vars.py)
+    :return: loaded data into memory as dataset
+    """
     mod_dir = global_vars.model_output[exp_idx]
     exp = global_vars.experiments[exp_idx]
 
@@ -139,6 +192,10 @@ def read_individual_month(var, file_type, month, exp_idx, isice=False):
 
 
 def read_vars_per_months():
+    """
+    This function defines variable names and types. It calls read_individual_month to compute multiannual monthly mean
+    :return: Dictionary with multiannual monthly means
+    """
     months = np.arange(1, 13)
     vars_file_type = {'emi': {'var': ['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS']},
                       'emi_gbx': {'var': ['gboxarea']},
@@ -157,6 +214,13 @@ def read_vars_per_months():
 
 
 def read_vars_per_seasons(sum_month, win_month, years):
+    """
+    This function calls read_emi_ice_files to read and compute the seasonal values of multiple variables
+    :param sum_month: list of summer months to select
+    :param win_month: list of winter months to select
+    :var years: list of min and max years to filter the data
+    :return: list of seasonal values for various variables
+    """
     omf_summer, omf_winter, wind_summer, wind_winter = (
         read_emi_ice_files(sum_month, win_month,
                            years,

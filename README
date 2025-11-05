@@ -1,7 +1,23 @@
-This project reads ECHAM-HAM data of emission flux and burden to generate global and regional plots.
-The conda environment for this project is contained in env.yml file. Please, run <conda activate env.yml> to set up the environment for this project.
+This project reads ECHAM6.3-HAM2.3 data of emission flux and burden to generate global and regional plots. Additionally,
+the seasonality is also computed and plotted
+The conda environment for this project is contained in env.yml file. Please, run <conda activate env.yml>
+to set up the environment for this project.
 
-Run main.py to create the figures of emission flux and burden of total marine organic aerosols (PCHO + DCAA + PL). The first part of the script generates the global plots (Fig. 6 of Leon-Marcos et al. 2024). It depends on the global fields generated using the model output with the bash scripts in folder "extract".  
-The second part of main.py script generates the Arctic plot for each organic aerosol group per season as defined with the variable "months".
+- Run main.py or run_main.sh to create the figures of global emission flux and burden of total PMOA (PCHO + DCAA + PL).
+The script generates the global plots (Fig. 6 of Leon-Marcos et al. 2024). It depends on the global fields generated
+using the model output with the bash scripts. It also creates .pkl files with the seasonal averaged values for various
+variables, including the 30-year average (1990-2019) and the 15-year average (1990-2004 and 2005-2019).
+
+- Run plot_maps.py script to generate the Arctic plot for each organic aerosol group per season as defined
+with the variable "months".
+Also plots the difference between the periods 1990-2004 and 2005-2019 for emission, wet deposition and burden used
+in Thesis.
+
+- Run main_seasonality.py or run_main_seasonality.sh to compute the multiannual monthly average of emissions and
+emission drivers.
+It will also create the multipanel figure with the seasonality, additionally it creates the heatmaps per regions of
+seasonality across years and regions (see function yearly_seasonality_arctic_and_reg_heatmap).
+
+
 
 

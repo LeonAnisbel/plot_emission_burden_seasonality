@@ -12,15 +12,22 @@ from matplotlib.ticker import AutoMinorLocator
 
 
 def format_func(value, tick_number):
+    """
+    This function will create the months labels considering that January is month 0, it returns 1
+    :returns value+1
+    """
     N = int(value + 1)
     return N
 
 
 font = 12
-
 def yearly_seasonality_arctic_and_reg(reg_data,variable):#, variable, mv
-    """ This function creates the four-panel plot of biomolecules and OMF seasonality for the Arctic and Arctic subregions
-    :returns None"""
+    """
+    This function creates the multi-panel plot of yearly seasonality for the Arctic and Arctic subregions
+    :var reg_data: dictionary-like data with all Arctic subregions
+    :var variable: variable name to plot
+    :returns None
+    """
     fig, axs = plt.subplots(4, 3, figsize=(14, 12))  # 15,8
     fig.suptitle(f'Arctic and Arctic subregions seasonality for {variable} \n',
                  fontsize=font+2,
@@ -84,8 +91,13 @@ def yearly_seasonality_arctic_and_reg(reg_data,variable):#, variable, mv
 
 
 def yearly_seasonality_arctic_and_reg_heatmap(reg_data, variable, norm_label=False):
-    """ This function creates the four-panel plot of biomolecules and OMF seasonality for the Arctic and Arctic subregions
-    :returns None"""
+    """
+    This function creates the multi-panel plot of yearly seasonality for the Arctic and Arctic subregions as heatmaps
+    :var reg_data: dictionary-like data with all Arctic subregions
+    :var variable: variable name to plot
+    :param norm_label: boolean flag to normalize the values or not
+    :returns None
+    """
     fig, axs = plt.subplots(3, 4,
                             figsize=(20, 18))  # 15,8
     if norm_label:
@@ -150,7 +162,16 @@ def yearly_seasonality_arctic_and_reg_heatmap(reg_data, variable, norm_label=Fal
 
 
 
-def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, title, limits, pos, left_axis=False):
+def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos):
+    """
+    This function plots the monthly seasonality for Arctic and Arctic subregions for emissions fluxes of marine species
+    and emission drivers
+    :param axes: axes object
+    :param fig: figure object
+    :var C_emi: list of emission flux for various species
+    :var C_atmos: list of emission drivers
+    :return: None
+    """
     print('starting plots')
     t_ax = C_atmos[0].time
     ax0 = axes[0]
@@ -208,8 +229,19 @@ def plot_monthly_series_pannel(axes, fig, C_emi, C_atmos, std_conc, std_omf, tit
 
 
 def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_names, botton_label=True):
+    """
+    This function plots the monthly seasonality and customize axis and labels
+    :param ax: axes object
+    :var C_conc: dataArray as multiannual monthly mean values to plot
+    :param c: color
+    :param mark: line style
+    :param ylabels: yaxis label
+    :param font: label and ticks font size
+    :param reg_names: name of Arctic subregions
+    :param botton_label: boolean flag to indicate whether it is a bottom panel to add x-label
+    :return: None
+    """
     t_ax = C_conc[0].index
-    print(C_conc[0])
     # if len(mark) > 1 :
     p2 = sns.lineplot(data=C_conc[0],
                       # dashes=mark,
@@ -256,6 +288,9 @@ def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_names, botton_label
     return p2
 
 def get_mean(dict, var_type, var_na ):
+    """
+    Computes non-weighted spatial mean
+    """
     da = dict[var_type]['seasonality'][var_na]
     # if var_type == 'emi':
     #     da = da.sum(dim=['lat', 'lon'],
@@ -267,6 +302,11 @@ def get_mean(dict, var_type, var_na ):
 
 
 def plot_all_seasonality(dict_seasonality):
+    """
+    Creates multipanel plot of monthly seasonality for Arctic and Arctic subregions
+    :param dict_seasonality: dictionary of emission drivers and emission fluxes
+    :return: None
+    """
     fig, axs = plt.subplots(1, 2,
                             figsize=(12, 6))  # 15,8
     ax = axs.flatten()
@@ -289,13 +329,7 @@ def plot_all_seasonality(dict_seasonality):
                                 emi_ss_mean],
                                [seaice_mean,
                                 sst_mean,
-                                wind],
-                               [],
-                               [],
-                               'title',
-                               [],
-                               0.27,
-                               left_axis=False)
+                                wind])
     fig.tight_layout()
     plt.savefig(f'Multiannual_monthly_emission_trends_poles.png',
                 dpi=300,
@@ -303,6 +337,14 @@ def plot_all_seasonality(dict_seasonality):
 
 
 def get_mean_reg(data_ds, gboxarea, var_type):
+    """
+     Computes weighted mean of data_ds considering the grid area from ECHAM-HAM. In the case of emissions the total
+     values are computed
+    :var data_ds: dataset-like
+    :var gboxarea: dataset of gridbox area
+    :param var_type: variable type to discern emissions fluxes from emission drivers
+    :return: df_reg_data as a dataframe with the whole data, monthly values and multiannual std
+    """
     mod_dir = global_vars.model_output[0]
     exp = global_vars.experiments[0]
 
@@ -335,15 +377,31 @@ def get_mean_reg(data_ds, gboxarea, var_type):
     return df_reg_data
 
 def create_pkl_files(data, var_na):
+    """
+    Saves data into a pickle file
+    :var data:
+    :param var_na: file name
+    :return: None
+    """
     with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "wb") as File:
         pickle.dump(data, File)
 
 def read_pkl_files(var_na):
+    """
+    Reads data from a pickle file
+    :param var_na: file name
+    :return: data
+    """
     with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "rb") as File:
         var = pickle.load(File)
     return var
 
 def seasonality_region_to_pickle_file(dict_seasonality):
+    """
+    Save dataframe data into a pickle file
+    :param dict_seasonality: dataframe
+    :return:
+    """
     gboxarea = dict_seasonality['emi_gbx']['seasonality']['gboxarea']
 
     emi_means_reg = {key: get_mean_reg(value, gboxarea, 'emi')
@@ -364,7 +422,7 @@ def seasonality_region_to_pickle_file(dict_seasonality):
     sst_m = echam_means_reg['tsw']
     wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea, 'vphysc')
 
-    print('Save variable in pickle files')
+    print('Save variable into pickle files')
     create_pkl_files(emi_lip, 'emi_LIP')
     create_pkl_files(emi_pol, 'emi_POL')
     create_pkl_files(emi_pol_pro, 'emi_POL_PRO')
@@ -377,6 +435,11 @@ def seasonality_region_to_pickle_file(dict_seasonality):
 
 
 def data_df_new(data_df):
+    """
+    Creates three dataframe to split information from the original dataframe
+    :var data_df: data frame data
+    :return: list of dataframes as monthly values, std and whole data
+    """
     reg_data = regions()
     reg_all_data = regions()
     reg_data_std = regions()
@@ -390,7 +453,11 @@ def data_df_new(data_df):
     return [df_reg_data, df_reg_data_std, reg_all_data]
 
 def plot_seasonality_region():
-
+    """
+    Reads pickle files of marine aerosol emissions and emission drivers to plot seasonality
+    :return: None
+    """
+    # Define y-axis labels
     var_ids = ['10m wind speed \n (m s${^{-1}}$)',
                'Open ocean fraction (%)',
                'SST ($^{o}$C)',
@@ -399,6 +466,7 @@ def plot_seasonality_region():
                'PL$_{aer}$ emission \n (Tg month$^{-1}$)',
                ]
 
+    #Read data
     emi_lip = read_pkl_files('emi_LIP') #* 1e5
     emi_pol_pro = read_pkl_files('emi_POL_PRO')# * 1e6
     emi_ss = read_pkl_files('emi_SS') #* 1e3
@@ -407,8 +475,6 @@ def plot_seasonality_region():
     wind = read_pkl_files('veloc10m')
 
     # adapt dataframe containing data and std to plot with sns
-
-
     variables = [data_df_new(wind),
                  data_df_new(seaice)*100,
                  data_df_new(sst),
@@ -430,18 +496,26 @@ def plot_seasonality_region():
                         ]
     norm_labels = [False, False, False, True, True, True]
 
+    # Plot yearly monthly data
     for idx,var_na in enumerate(var_ids):
         yearly_seasonality_arctic_and_reg(var_all_data[idx],var_na)
         yearly_seasonality_arctic_and_reg_heatmap(var_all_data[idx],var_ids_heatmap[idx], norm_label=norm_labels[idx])
 
+    # Plot multiannual monthly seasonality as 9-panel Figure
     plot_seanonality_reg_species_acp_plot([var_values, var_std],
                                  var_ids)
+    # Plot multiannual monthly seasonality Figure of six-panel plot
     # plot_seanonality_reg_species([var_values, var_std],
     #                              var_ids)
 
 
 
 def plot_seanonality_reg_species(variables, ylabels):
+    """ Creates six-panel figure with multiannual monthly seasonal values for all Arctic subregions
+    :var variables: list of dataframes with monthly values and std
+    :param ylabels: y-axis labels names
+    :return: None
+    """
     if global_vars.lat_arctic_lim == 63: # then do thesis plot
         fig, axs = plt.subplots(3, 2,
                                 figsize=(10, 12))  # 15,8
@@ -495,10 +569,6 @@ def plot_seanonality_reg_species(variables, ylabels):
         axs.grid(linestyle='--',
                  linewidth=0.4)
 
-        def format_func(value, tick_number):
-            N = int(value + 1)
-            return N
-
         axs.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
     box = ax[-3].get_position()
@@ -521,35 +591,33 @@ def plot_seanonality_reg_species(variables, ylabels):
     plt.close()
 
 
-def format_func(value, tick_number):
-    N = int(value + 1)
-    return N
-
-
 def plot_seanonality_reg_species_acp_plot(variables, ylabels):
+    """ Creates nine-panel figure with multiannual monthly seasonal values for all Arctic subregions. An Additional
+    panel was added for regions with high total emission fluxes (Arctic, Greenland & Norwegian Sea and Barents Sea)
+    :var variables: list of dataframes with monthly values and std
+    :param ylabels: y-axis labels names
+    :return: None
+    """
     id_ax = 7
     font = 14
     height_ratios = [1., 0.7, 0.7]
 
     fig, axes = plt.subplots(
         nrows=3, ncols=3,
-        figsize=(14, 10),  # wider for 3 columns
+        figsize=(14, 10),
         gridspec_kw={
             'height_ratios': height_ratios,
-            # 'hspace': 0.1,  # vertical spacing
-            # 'wspace': 0.5  # horizontal spacing
 
         },
-        sharex=True,  # optional, but usually helpful
-        # constrained_layout=True
+        sharex=True,
     )
-    # Row groups you can use:
     ax = axes[0, :]  # top row, 3 axes
     ax2 = axes[1, :]  # third row, 3 axes
     ax3 = axes[2, :]  # fourth row, 3 axes
 
     _, color_reg, linestyle = utils.line_style_regions()
 
+    # plot emission drivers
     xaxislabel = False
     for i in range(len(variables[0][:3])):
         leg_list = []
@@ -577,9 +645,10 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
         ax[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
 
 
+    # Define parameters for high-total emission fluxes Arctic, Greenland & Norwegian Sea and Barents Sea as well as for
+    # the remaining regions
     factors = [1.e1, 1.e4, 1e2]
     factors_lab = ['10$^{-1}$', '10$^{-4}$', '10$^{-2}$']
-
     reg_style_dict, _, _ = utils.line_style_regions()
     color_reg_sel1, color_reg_sel2 = [], []
     line_style1, line_style2 = [], []
@@ -594,10 +663,10 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
             color_reg_sel2.append(reg_style_dict[reg]['color'])
             line_style2.append(reg_style_dict[reg]['linestyle'])
 
+    # plot total emission for Arctic, Greenland & Norwegian Sea and Barents Sea
     for i in range(len(variables[0][3:])):
         C_var = variables[0][i+3]*factors[i]
         C_sel = C_var[region_sel1]
-        # C_sel['line_style'] = mark_sel
         C_sel_std = variables[1][i+3][region_sel1]*factors[i]
         p2 = plot_seasons_reg(ax2[i],
                               [C_sel, C_sel_std],
@@ -612,14 +681,12 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
         ax2[i].set_ylabel(' \n ')
         ax2[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
 
-        # ax2[i].xaxis.set_ticks([])
 
-
+    # plot total emission for other Arctic subregions except for the Arctic, Greenland & Norwegian Sea and Barents Sea
     for i in range(len(variables[0][3:])):
         xaxislabel = True
         C_var = variables[0][i+3]
         C_sel = C_var[region_sel2]*factors[i]
-        # C_sel['line_style'] = line_style
         C_sel_std = variables[1][i+3][region_sel2]*factors[i]
         p2 = plot_seasons_reg(ax3[i],
                               [C_sel, C_sel_std],
@@ -639,7 +706,6 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
     titles = [r'$\bf{(a)}$', r'$\bf{(b)}$',
               r'$\bf{(c)}$', r'$\bf{(d)}$',
               r'$\bf{(e)}$', r'$\bf{(f)}$']
-    ax13 = list(ax)+ list(ax3)
 
     ax12 = list(ax)+ list(ax2)
     for i, axs in enumerate(ax12):
@@ -647,15 +713,12 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
                       loc='right',
                       fontsize=font)
 
-    ax123 = list(ax)+ list(ax2) + list(ax3)
     for a, b, c in zip(ax, ax2, ax3):
         a.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
         b.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
         c.yaxis.set_major_formatter(FormatStrFormatter('%.3g'))
-    #
-    # box = ax3[0].get_position()
-    # ax3[0].set_position([box.x0, box.y0 + box.height * 0.1,
-    #                      box.width, box.height * 0.9])
+
+    # Collocate ylabels where I want
     fig.text(0.025, 0.17,
              f'SS emission ({factors_lab[0]}'+' Tg month$^{-1}$)',
              fontsize=font,
