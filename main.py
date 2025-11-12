@@ -1,3 +1,4 @@
+import os
 import plot_maps, read_files, global_vars
 import plot_seasonality
 
@@ -11,9 +12,10 @@ except OSError:
 
 
 # Plot global map of burden and emission
+plot_maps.plot_atlantic()
+
+exit()
 plot_maps.plot_global_average_maps(thirty_yrs)
-
-
 print('Plot complete emission and Burden')
 print('start with Arctic analysis')
 

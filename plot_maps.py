@@ -3,6 +3,7 @@ import cartopy.crs as ccrs
 import cartopy
 import matplotlib.colors as mcolors
 import numpy as np
+import xarray as xr
 from matplotlib.ticker import FormatStrFormatter
 import global_vars
 import matplotlib.path as mpath
@@ -26,13 +27,15 @@ def create_fig(h, w):
     return plt.figure(constrained_layout=True, figsize=(h, w))
 
 
-def customize_axis(ax, titles, polar_proj, plot_diff=False):
+def customize_axis(ax, titles, polar_proj, plot_diff=False, labels=False, color_land=True):
     """
     Customize map
     :param ax: ax object
     :param titles: list with upper title labels
     :param polar_proj: boolean to discern whether to customize a polar projection plot
     :param plot_diff: boolean to discern whether to plot the 15-year difference
+    :param labels: boolean to discern whether to add labels to the figure
+    :param color_land: boolean to discern whether to color the land or not
     :return: None
     """
     if plot_diff or not polar_proj:
@@ -64,19 +67,23 @@ def customize_axis(ax, titles, polar_proj, plot_diff=False):
                           alpha=0.5,
                           linestyle='--')
         gl.top_labels = False
-        gl.right_labels = False
-        gl.bottom_labels = False
+        gl.right_labels = labels
+        gl.bottom_labels = labels
         gl.left_labels = False
 
         ax.coastlines()
-        if titles[0] != 'Total burden' and titles[0] != 'Surface emission flux':
+        if color_land:
             ax.add_feature(cartopy.feature.NaturalEarthFeature('physical',
                                                                'land', '110m',
                                                                edgecolor='black',
                                                                facecolor='oldlace'))  # lightgray
 
-    ax.set_title(titles[0], loc='right', fontsize=font)
-    ax.set_title(titles[1], loc='left', fontsize=font)
+    ax.set_title(titles[0],
+                 loc='right',
+                 fontsize=font)
+    ax.set_title(titles[1],
+                 loc='left',
+                 fontsize=font)
 
 
 def add_ice_colorbar(fig, ic, ff, plot_ice=True):
@@ -103,7 +110,7 @@ def add_ice_colorbar(fig, ic, ff, plot_ice=True):
                    bbox_to_anchor=(0.75, 6))
 
 
-def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
+def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False, atlantic=False, labels=False, color_land=True):
     """
     Plots moa data and customize axis
     :param subfig:
@@ -113,12 +120,20 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
     :param vm: max value for colorbar
     :param colorb: color bar style
     :param polar_proj: boolean to discern whether to create a map with a polar projection
+    :param atlantic: boolean to discern whether to create a map for the Atlantic region
+    :param labels: boolean to discern whether to add labels to the figure
+    :param color_land: boolean to discern whether to color the land or not
     :return: None
     """
     if polar_proj:
         axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
                                subplot_kw={'projection': ccrs.NorthPolarStereo()})
         axes.set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
+
+    elif atlantic:
+        axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
+                               subplot_kw={'projection': ccrs.Robinson()})
+        axes.set_extent([-65, 35, -10, 40], ccrs.PlateCarree())
 
     else:
         axes = subfig.subplots(nrows=1, ncols=1, sharex=True,
@@ -140,7 +155,7 @@ def each_fig(subfig, moa, titles, unit, vm, colorb, polar_proj=False):
     cbar.set_label(label=unit, fontsize=12)
     cbar.ax.xaxis.set_major_formatter(FormatStrFormatter('%.3g'))
 
-    customize_axis(axes, titles, polar_proj=polar_proj)
+    customize_axis(axes, titles, polar_proj=polar_proj, labels=labels, color_land=color_land)
 
 
 def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=False):
@@ -168,13 +183,23 @@ def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=
         title = f'arctic_emiss_burden_{var}.png'
         vm = [[0, 1.2], [0, 0.005]]
 
+    color_land = [True, False]
     for idx, subf in enumerate(subfigs):
-        each_fig(subf, moa[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
+        each_fig(subf,
+                 moa[idx],
+                 names[idx],
+                 units[idx],
+                 vm[idx],
+                 colorb[idx],
+                 polar_proj=polar_proj,
+                 color_land=color_land[idx])
 
     if thirty_yrs: yr_name = '30yr_'
     else: yr_name = '10yr_'
 
-    plt.savefig(f'{global_vars.plot_dir}/{yr_name}{title}', dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{yr_name}{title}',
+                dpi=300,
+                bbox_inches="tight")
     #     fig.tight_layout()
 
 
@@ -619,6 +644,61 @@ def plot_global_average_maps(thirty_yrs):
                                    burden_tot,
                                    'MOA',
                                    thirty_yrs=thirty_yrs)
+
+
+def plot_atlantic():
+    """
+    Creates figures of temporally averaged total emission flux and burden for the central atlantic and each biomolecule
+    :return: None
+    """
+    data_dir = global_vars.project_dir_glb+'1990_2004_and_2005_2019/'
+
+    f_id_bur = '_mean_global_whole_grid_total_'
+    f_id_emi = '_mean_whole_grid_glb_annual_total_'
+    years = ['1990_2004', '2005_2019', '1990_2019']
+    fac = 1
+    variables = ['LIP', 'POL', 'PRO', 'PMOA', 'SS']
+    var_names = ['PL', 'PCHO', 'DCAA', 'PMOA', 'SS']
+    limits = [[[0, 0.5], [0, 0.5]],
+              [[0, 0.008], [0, 0.03]],
+              [[0, 0.06], [0, 0.06]],
+              [[0, 0.6], [0, 0.6]],
+              [[0, 20], [0, 30]],
+    ]
+    for yr in years:
+        for id,var in enumerate(variables):
+            emi = xr.open_dataset(f'{data_dir}emi/emi_{var}_emi{f_id_emi}{yr}.nc')[f'emi_{var}']*fac
+            burden = xr.open_dataset(f'{data_dir}burden/burden_{var}_burden{f_id_bur}{yr}.nc')[f'burden_{var}']
+
+            fig = create_fig(10, 7)
+            (subfig1, subfig2) = fig.subfigures(nrows=1, ncols=2)
+            subfigs = [subfig1, subfig2]
+
+            title = f'global_emiss_burden_{var}'
+            moa = [emi.isel(time=0), burden.isel(time=0)]
+            names = [[f'{var_names[id]} total emission flux', r' '],
+                     [f'{var_names[id]} total burden', r' ']]
+            units = ['mg m$^{-2}$ yr$^{-1}}$', 'mg m$^{-2}$']
+            vm = limits[id]
+            colorb = global_vars.colorbar['MOA']
+            color_land = [True, False]
+            for idx, subf in enumerate(subfigs):
+                each_fig(subf,
+                         moa[idx],
+                         names[idx],
+                         units[idx],
+                         vm[idx],
+                         colorb[idx],
+                         atlantic=True,
+                         labels=True,
+                         color_land=color_land[idx])
+
+            plt.savefig(f'plots_atlantic/{yr}_{title}_atlantic.png',
+                        dpi=300,
+                        bbox_inches="tight")
+            plt.close()
+
+
 
 def calculate_diff(season, var, fac):
     """
