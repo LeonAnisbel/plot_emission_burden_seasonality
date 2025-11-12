@@ -1,5 +1,12 @@
+import os
+import global_vars
 import plot_seasonality
 import read_files
+
+try:
+    os.makedirs(global_vars.plot_dir)
+except OSError:
+    pass
 
 dict_seasonality = read_files.read_vars_per_months()
 print('Read all data and calculate monthly mean')

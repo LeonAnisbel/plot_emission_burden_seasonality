@@ -3,6 +3,13 @@ import plot_seasonality
 
 thirty_yrs = True  # change to False for 10 yrs mean plot (2009-2019)
 
+
+try:
+    os.makedirs(global_vars.plot_dir)
+except OSError:
+    pass
+
+
 # Plot global map of burden and emission
 plot_maps.plot_global_average_maps(thirty_yrs)
 
