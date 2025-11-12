@@ -656,14 +656,15 @@ def plot_atlantic():
     f_id_bur = '_mean_global_whole_grid_total_'
     f_id_emi = '_mean_whole_grid_glb_annual_total_'
     years = ['1990_2004', '2005_2019', '1990_2019']
-    fac = 1
+    fac = 1e-3
     variables = ['LIP', 'POL', 'PRO', 'PMOA', 'SS']
     var_names = ['PL', 'PCHO', 'DCAA', 'PMOA', 'SS']
-    limits = [[[0, 0.5], [0, 0.5]],
-              [[0, 0.008], [0, 0.03]],
-              [[0, 0.06], [0, 0.06]],
-              [[0, 0.6], [0, 0.6]],
-              [[0, 20], [0, 30]],
+    units = ['g m$^{-2}$ yr$^{-1}}$', 'mg m$^{-2}$']
+    limits = [[[0, 0.2], [0, 0.5]],
+              [[0, 0.004], [0, 0.03]],
+              [[0, 0.02], [0, 0.06]],
+              [[0, 0.2], [0, 0.6]],
+              [[0, 15], [0, 30]],
     ]
     for yr in years:
         for id,var in enumerate(variables):
@@ -678,7 +679,6 @@ def plot_atlantic():
             moa = [emi.isel(time=0), burden.isel(time=0)]
             names = [[f'{var_names[id]} total emission flux', r' '],
                      [f'{var_names[id]} total burden', r' ']]
-            units = ['mg m$^{-2}$ yr$^{-1}}$', 'mg m$^{-2}$']
             vm = limits[id]
             colorb = global_vars.colorbar['MOA']
             color_land = [True, False]
