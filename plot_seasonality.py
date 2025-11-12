@@ -84,7 +84,7 @@ def yearly_seasonality_arctic_and_reg(reg_data,variable):#, variable, mv
                loc='upper center',
                fontsize=font)
     fig.tight_layout()
-    plt.savefig(f'{global_vars.plot_dir}Yearly_monthly_poles_subregions_{variable}.png',
+    plt.savefig(f'{global_vars.plot_dir}/Yearly_monthly_poles_subregions_{variable}.png',
                 dpi=300,
                 bbox_inches="tight")
     plt.close()
@@ -155,7 +155,7 @@ def yearly_seasonality_arctic_and_reg_heatmap(reg_data, variable, norm_label=Fal
     ax[-1].axis('off')
 
     fig.tight_layout()
-    plt.savefig(f'{global_vars.plot_dir}Yearly_monthly_poles_subregions_{variable}_heatmaps.png',
+    plt.savefig(f'{global_vars.plot_dir}/Yearly_monthly_poles_subregions_{variable}_heatmaps.png',
                 dpi=300,
                 bbox_inches="tight")
     plt.close()
@@ -585,7 +585,7 @@ def plot_seanonality_reg_species(variables, ylabels):
                fontsize=font)
     fig.tight_layout()
 
-    plt.savefig(global_vars.plot_dir + 'Multiannual_monthly_seasonality_subregions_emission_sic_sst.png',
+    plt.savefig(f'{global_vars.plot_dir}/Multiannual_monthly_seasonality_subregions_emission_sic_sst.png',
                 dpi=300,
                 bbox_inches="tight")
     plt.close()
@@ -742,6 +742,6 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
                fontsize=font)
     fig.tight_layout()
 
-    plt.savefig(global_vars.plot_dir + 'Multiannual_monthly_seasonality_subregions_emission_sic_sst_acp_plot.png',
+    plt.savefig(f'{global_vars.plot_dir}/Multiannual_monthly_seasonality_subregions_emission_sic_sst_acp_plot.png',
                 dpi=300,  bbox_inches='tight')
     plt.close()

@@ -4,7 +4,7 @@ main_dir = main + 'echam_postproc/emi_burden_sfc_box_plots/'
 project_dir_glb = main_dir + 'mean_burden_and_emission/global_emission_burden_'
 lat_arctic_lim = 66
 
-plot_dir = main_dir + f'plot_emi_burden_maps/plots_{lat_arctic_lim}/'
+plot_dir = main_dir + f'plot_emi_burden_maps/plots_{lat_arctic_lim}'
 main_new = '/work/bb1178/b324073/'
 model_output = [main_new + experiments[0] + '/',
                 main_new + experiments[1] + '/']

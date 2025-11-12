@@ -1,10 +1,8 @@
 import pandas as pd
-
 import global_vars
 import xarray as xr
 import glob
 import numpy as np
-
 import utils
 
 

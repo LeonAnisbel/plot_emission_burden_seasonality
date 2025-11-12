@@ -174,7 +174,7 @@ def plot_emi_burden_maps(moa_emi, moa_burden, var, polar_proj=False, thirty_yrs=
     if thirty_yrs: yr_name = '30yr_'
     else: yr_name = '10yr_'
 
-    plt.savefig(global_vars.plot_dir + yr_name + title, dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{yr_name}{title}', dpi=300, bbox_inches="tight")
     #     fig.tight_layout()
 
 
@@ -233,7 +233,7 @@ def plot_emi_burden_maps_vert_profile(moa_emi, moa_burden, moa_conc, var, polar_
     plt.gca().invert_yaxis()
 
     plt.show()
-    plt.savefig(global_vars.plot_dir + yr_name + 'vert_profile_' + title, dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{yr_name}vert_profile_{title}', dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -258,7 +258,7 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
 
     for idx, subf in enumerate(subfigs):
         each_fig(subf, var[idx], names[idx], units[idx], vm[idx], colorb[idx], polar_proj=polar_proj)
-    plt.savefig(global_vars.plot_dir + f'{fig_na}{var_id}.png', dpi=300, bbox_inches="tight")
+    plt.savefig( f'{global_vars.plot_dir}/{fig_na}{var_id}.png', dpi=300, bbox_inches="tight")
 
 
 def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
@@ -430,7 +430,7 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
     # labels = np.arange(20, 100, 15)
     # ic_bar.set_ticklabels(labels)
 
-    plt.savefig(global_vars.plot_dir + title + '_pole_emiss.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{title}_pole_emiss.png', dpi=300, bbox_inches="tight")
     #     fig.tight_layout()
 
 
@@ -532,7 +532,7 @@ def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=
         bottom=0.05, top=0.95,
         wspace=0.10, hspace=0.12
     )
-    plt.savefig(global_vars.plot_dir + title + '_pole_emiss.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{title}_pole_emiss.png', dpi=300, bbox_inches="tight")
 
 
 
@@ -574,7 +574,7 @@ def plot_omf_emi_wind_sst_season(variables, ice, title, var_id):
 
     add_ice_colorbar(fig, ic, 18)
 
-    plt.savefig(global_vars.plot_dir + 'omf_emiss_wind_pole.png', dpi=300, bbox_inches="tight")  #
+    plt.savefig(f'{global_vars.plot_dir}/omf_emiss_wind_pole.png', dpi=300, bbox_inches="tight")  #
 
 
 

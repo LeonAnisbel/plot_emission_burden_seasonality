@@ -27,4 +27,4 @@ for idx,var_na in enumerate(var_names):
                 (num_summer[1][var_na] * dens_summer[1]['rhoam1']).compute()).to_dataset(name='diff')
     print(num_diff.max().values, num_diff.min().values)
     plot_maps.each_fig(fig, num_diff['diff'].isel(lev=46)/factor[idx], ['', f'{var_na} MOA_exp - BASE'], units[idx], [-0.5, 0.5], 'coolwarm')
-    plt.savefig(global_vars.plot_dir + f'Diff_MOA_exp_BASE_{var_na}.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/Diff_MOA_exp_BASE_{var_na}.png', dpi=300, bbox_inches="tight")
