@@ -10,11 +10,10 @@ try:
 except OSError:
     pass
 
-
-# Plot global map of burden and emission
+# Plot map of burden and emission over the central Atlantic
 plot_maps.plot_atlantic()
 
-exit()
+# Plot global map of burden and emission
 plot_maps.plot_global_average_maps(thirty_yrs)
 print('Plot complete emission and Burden')
 print('start with Arctic analysis')
