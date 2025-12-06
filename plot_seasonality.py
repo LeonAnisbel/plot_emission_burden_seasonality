@@ -275,12 +275,12 @@ def plot_seasons_reg(ax, C_conc, c, mark, ylabels, font, reg_names, botton_label
     # ax.set_ylim(0, ylims[0])
     ax.yaxis.set_tick_params(labelsize=font)
 
-    def format_func(value, tick_number):
-        N = int(value + 1)
-        return N
+    def format_months(x, pos):
+        return f"{int(x) + 1}"
 
     if botton_label:
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_months))
         ax.xaxis.set_tick_params(labelsize=font)
         ax.set_xlabel("Months",
                       fontsize=font)
@@ -318,7 +318,7 @@ def plot_all_seasonality(dict_seasonality):
     print('finished computing means emi')
 
     seaice_mean = get_mean(dict_seasonality, 'echam', 'seaice')
-    sst_mean = get_mean(dict_seasonality, 'echam', 'tsw') - 273.16
+    sst_mean = get_mean(dict_seasonality, 'vphysc', 'tsw') - 273.16
     wind = get_mean(dict_seasonality, 'vphysc', 'velo10m')
 
     print('finished computing means')
@@ -419,8 +419,10 @@ def seasonality_region_to_pickle_file(dict_seasonality):
     open_ocean_fraction = 1 - dict_seasonality['echam']['seasonality']['seaice']
     open_ocean_fraction_m =  get_mean_reg(open_ocean_fraction, gboxarea, 'open_ocean_frac')
 
-    sst_m = echam_means_reg['tsw']
-    wind_mean = get_mean_reg(dict_seasonality['vphysc']['seasonality']['velo10m'], gboxarea, 'vphysc')
+    vphysc_mean_reg = {key: get_mean_reg(value, gboxarea, 'vphysc')
+                        for key, value in dict_seasonality['vphysc']['seasonality'].items()}
+    sst_m = vphysc_mean_reg['tsw']
+    wind_mean = vphysc_mean_reg['velo10m']
 
     print('Save variable into pickle files')
     create_pkl_files(emi_lip, 'emi_LIP')
@@ -497,9 +499,9 @@ def plot_seasonality_region():
     norm_labels = [False, False, False, True, True, True]
 
     # Plot yearly monthly data
-    for idx,var_na in enumerate(var_ids):
-        yearly_seasonality_arctic_and_reg(var_all_data[idx],var_na)
-        yearly_seasonality_arctic_and_reg_heatmap(var_all_data[idx],var_ids_heatmap[idx], norm_label=norm_labels[idx])
+    # for idx,var_na in enumerate(var_ids):
+    #     yearly_seasonality_arctic_and_reg(var_all_data[idx],var_na)
+    #     yearly_seasonality_arctic_and_reg_heatmap(var_all_data[idx],var_ids_heatmap[idx], norm_label=norm_labels[idx])
 
     # Plot multiannual monthly seasonality as 9-panel Figure
     plot_seanonality_reg_species_acp_plot([var_values, var_std],
@@ -609,8 +611,10 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
             'height_ratios': height_ratios,
 
         },
+
         sharex=True,
     )
+    # plt.subplots_adjust(wspace=0.01)
     ax = axes[0, :]  # top row, 3 axes
     ax2 = axes[1, :]  # third row, 3 axes
     ax3 = axes[2, :]  # fourth row, 3 axes
@@ -643,7 +647,6 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
         ax[i].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         ax[i].xaxis.set_minor_locator(AutoMinorLocator(2))  # 4 minor intervals → 3 minor ticks
-
 
     # Define parameters for high-total emission fluxes Arctic, Greenland & Norwegian Sea and Barents Sea as well as for
     # the remaining regions
@@ -732,16 +735,29 @@ def plot_seanonality_reg_species_acp_plot(variables, ylabels):
              fontsize=font,
              rotation=90)
 
-    handles, labels = ax[0].get_legend_handles_labels()
+    lines = ax[-1].get_lines()[-len(linestyle):]
 
-    fig.legend(handles=handles,
-               labels= labels,
-               ncol=3,
-               bbox_to_anchor=(0.5, 0.),
-               loc='upper center',
-               fontsize=font)
+    for ln, seq in zip(lines, linestyle):
+        if not seq:
+            ln.set_linestyle('solid')
+            ln.set_dashes(())
+        else:
+            ln.set_linestyle('solid')
+            ln.set_dashes(seq)
+
+    # use *those same lines* as legend handles
+    fig.legend(
+        handles=lines,
+        labels=[ln.get_label() for ln in lines],
+        ncol=3,
+        bbox_to_anchor=(0.5, 0.),
+        loc='upper center',
+        fontsize=font,
+    )
     fig.tight_layout()
 
     plt.savefig(f'{global_vars.plot_dir}/Multiannual_monthly_seasonality_subregions_emission_sic_sst_acp_plot.png',
-                dpi=300,  bbox_inches='tight')
+                dpi=300,
+                bbox_inches='tight'
+                )
     plt.close()

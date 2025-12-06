@@ -119,6 +119,7 @@ def line_style_regions():
     color_reg = ['k', 'r', 'm', 'pink',
                  'lightgreen', 'darkblue', 'orange',
                  'brown', 'lightblue', 'y', 'gray']
+    #AI-generated
     line_styles = [
         [1.0, 0.0],  # solid
         [5.0, 2.0],  # long dash
@@ -130,7 +131,7 @@ def line_style_regions():
         [6.0, 1.0, 1.0, 1.0],  # long-short pattern
         [2.0, 3.0, 1.0, 3.0],  # spaced dots
         [5.0, 1.0, 2.0, 1.0],  # alternating dashes
-        [7.0, 3.0, 2.0, 3.0],  # long dash–dot pattern
+        [7.0, 1.5, 1.0, 3.0],  # long dash–dot pattern
     ]
     reg_style_dict = regions()
     for i, reg in enumerate(list(reg_style_dict.keys())):
