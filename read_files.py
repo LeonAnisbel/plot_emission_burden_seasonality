@@ -197,8 +197,8 @@ def read_vars_per_months():
     months = np.arange(1, 13)
     vars_file_type = {'emi': {'var': ['emi_POL', 'emi_PRO', 'emi_LIP', 'emi_SS']},
                       'emi_gbx': {'var': ['gboxarea']},
-                      'echam': {'var': ['seaice', 'tsw']},
-                      'vphysc': {'var': ['velo10m']},
+                      'echam': {'var': ['seaice']},
+                      'vphysc': {'var': ['velo10m', 'tsw']},
                       }
 
     for file_type in vars_file_type.keys():
@@ -237,7 +237,7 @@ def read_vars_per_seasons(sum_month, win_month, years):
                            years,
                            'emi',
                            ['emi_SS'],
-                           'echam',
+                           'vphysc',
                            'tsw',
                            0,
                            isice=False))
