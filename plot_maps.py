@@ -26,7 +26,7 @@ def create_fig(h, w):
     return plt.figure(constrained_layout=True, figsize=(h, w))
 
 
-def customize_axis(ax, titles, polar_proj, plot_diff=False):
+def customize_axis(ax, titles, polar_proj, plot_diff=False, label_center= False):
     """
     Customize map
     :param ax: ax object
@@ -75,8 +75,15 @@ def customize_axis(ax, titles, polar_proj, plot_diff=False):
                                                                edgecolor='black',
                                                                facecolor='oldlace'))  # lightgray
 
-    ax.set_title(titles[0], loc='right', fontsize=font)
-    ax.set_title(titles[1], loc='left', fontsize=font)
+    if label_center: l = 'center'
+    else: l = 'right'
+    print(l)
+    ax.set_title(titles[0],
+                 loc=l,
+                 fontsize=font)
+    ax.set_title(titles[1],
+                 loc='left',
+                 fontsize=font)
 
 
 def add_ice_colorbar(fig, ic, ff, plot_ice=True):
@@ -262,7 +269,7 @@ def plot_wind_prep_emi_burden_global(var, var_id, fig_na, polar_proj=False):
 
 
 def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
-                    lower=False, polar_proj=True, plot_ice=True, plot_diff=False):
+                    lower=False, polar_proj=True, plot_ice=True, plot_diff=False, label_center=False):
     """
     Creates the subplot or subplots for each subfigure
     :param subfig: subfigure instance
@@ -283,7 +290,9 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
     if plot_diff: col = 2
     else: col = 1
 
-    axes = subfig.subplots(nrows=1, ncols=col, sharex=True,
+    axes = subfig.subplots(nrows=1,
+                           ncols=col,
+                           sharex=True,
                            subplot_kw={'projection': ccrs.NorthPolarStereo()})
     cmap = plt.get_cmap(colorb, 15)  # 11 discrete colors
 
@@ -292,9 +301,18 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
             #     for i,ax in enumerate(axes):
         for i in range(len(moa)):
             axes[i].set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
-            im = axes[i].pcolormesh(moa[i].lon, moa[i].lat, moa[i],
-                                 cmap=cmap, vmin=-vma, vmax=vma,transform=ccrs.PlateCarree(), alpha=0.8)
-            customize_axis(axes[i], titles[i], polar_proj=polar_proj, plot_diff=plot_diff)
+            im = axes[i].pcolormesh(moa[i].lon,
+                                    moa[i].lat,
+                                    moa[i],
+                                    cmap=cmap,
+                                    vmin=-vma,
+                                    vmax=vma,
+                                    transform=ccrs.PlateCarree(),
+                                    alpha=0.8)
+            customize_axis(axes[i],
+                           titles[i],
+                           polar_proj=polar_proj,
+                           plot_diff=plot_diff)
             # if titles[0][0] == 'DCAA$_{aer}$ \n':
             #     subfig.suptitle('\n'+ name + '\n \n \n \n',
             #                      fontsize='16',
@@ -306,7 +324,8 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
                                       np.arange(10, 110, 30),  # levels=5,
                                       cmap='Greys_r',
                                       transform=ccrs.PlateCarree())
-            axes[i].set_position([0, 0, 1, 1], which='both')
+            axes[i].set_position([0, 0, 1, 1],
+                                 which='both')
 
         ext = 'both'
         cbar_ax = subfig.add_axes([0.28, 0.17, 0.45, 0.05]) #(left, bottom, width, height)
@@ -318,15 +337,26 @@ def each_fig_season(subfig, moa, ice, titles, unit, vma, colorb, sh, name,
                                extend=ext,
                                pad=0.000001,)
         cbar.ax.tick_params(labelsize=16)
-        cbar.set_label(label=unit, fontsize='16')  # , weight='bold'
+        cbar.set_label(label=unit,
+                       fontsize='16')  # , weight='bold'
         cbar.ax.xaxis.set_major_formatter(FormatStrFormatter('%.3g'))
 
     else:
-        axes.set_extent([-180, 180, 50, 90], ccrs.PlateCarree())
-        im = axes.pcolormesh(moa.lon, moa.lat, moa,
-                             cmap=cmap, transform=ccrs.PlateCarree(),
-                             vmin=0, vmax=vma, alpha=0.8)
-        customize_axis(axes, titles, polar_proj=polar_proj)
+        axes.set_extent([-180, 180, 50, 90],
+                        ccrs.PlateCarree())
+        im = axes.pcolormesh(moa.lon,
+                             moa.lat,
+                             moa,
+                             cmap=cmap,
+                             transform=ccrs.PlateCarree(),
+                             vmin=0,
+                             vmax=vma,
+                             alpha=0.8)
+        customize_axis(axes,
+                       titles,
+                       polar_proj=polar_proj,
+                       plot_diff=plot_diff,
+                       label_center=label_center)
         ext = 'max'
 
         if lower:
@@ -425,13 +455,71 @@ def plot_emi_season(moa_emi_summer, moa_emi_winter, ice_summer, ice_winter, var_
                              None,
                              plot_ice=plot_ice)
 
-    add_ice_colorbar(fig, ic, 18, plot_ice=plot_ice)
+    add_ice_colorbar(fig,
+                     ic,
+                     18,
+                     plot_ice=plot_ice)
 
     # labels = np.arange(20, 100, 15)
     # ic_bar.set_ticklabels(labels)
 
-    plt.savefig(f'{global_vars.plot_dir}/{title}_pole_emiss.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'{global_vars.plot_dir}/{title}_pole_emiss.png',
+                dpi=300,
+                bbox_inches="tight")
     #     fig.tight_layout()
+
+
+def plot_emi_month(moa_emi, ice, var_id, title, var, mo, plot_ice=True):
+    """
+    Creates figure of seasonal emission maps
+    :var moa_emi: list of PMOA species emission for a certain month
+    :var ice: ice concentration for a certain month
+    :param var_id: ID of variable type
+    :param title: subplot title
+    :param var: var indicating whether this is an emission or emission driver
+    :param plot_ice: boolean to plot ice colorbar or not
+    :return: None
+    """
+    fig = create_fig(12, 6)  # layout='constrained',constrained_layout=True
+
+    subfig1, subfig2, subfig3 = fig.subfigures(nrows=1,
+                                              ncols=3,)
+                                              # hspace=0.07,)
+                                              # height_ratios=[1, 1.25])
+    subfigs = [subfig1, subfig2, subfig3]
+
+    moa = [moa_emi[f'{var_id}_POL'],
+           moa_emi[f'{var_id}_PRO'],
+           moa_emi[f'{var_id}_LIP']]
+
+    names = [[r'PCHO$_{aer}$', ' '],
+             [mo+'\n\n\n'+r'DCAA$_{aer}$', ' '],
+             [r'PL$_{aer}$', ' ']]
+
+    units = global_vars.unit_arctic[var][var_id][0]
+    vm = [0.032, 0.15, 2.1]
+    for idx, subf in enumerate(subfigs):
+        ic = each_fig_season(subf,
+                             moa[idx],
+                             ice['seaice'],
+                             names[idx],
+                             units,
+                             vm[idx],
+                             'jet',
+                             1,
+                             None,
+                             lower=True,
+                             plot_ice=plot_ice,
+                             label_center=True)
+
+    add_ice_colorbar(fig,
+                     ic,
+                     18,
+                     plot_ice=plot_ice)
+
+    plt.savefig(f'{global_vars.plot_dir}/{title}_pole_emiss.png',
+                dpi=300,
+                bbox_inches="tight")
 
 
 def plot_15yr_difference(moa_emi, moa_burden, moa_wdep, seaice, title, plot_ice=False):
@@ -690,7 +778,7 @@ if __name__ == '__main__':
                       ice[0]  ,
                       ice[1] ,
                       'emi',
-                      'Surface_emission_flux_'+file_name,
+                      '_Surface_emission_flux'+file_name,
                       'MOA')
 
     # Plot the difference between the periods 1990-2004 and 2005-2019 for emission, wet deposition and burden

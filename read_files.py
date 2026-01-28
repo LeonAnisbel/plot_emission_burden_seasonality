@@ -3,6 +3,8 @@ import global_vars
 import xarray as xr
 import glob
 import numpy as np
+
+import plot_maps
 import utils
 
 
@@ -139,6 +141,73 @@ def read_emi_ice_files(sum_mo, win_mo, year, file_type1, emi_var, file_type2, at
     ice_ds_winter = sel_var_season(ice_ds, 'winter', win_mo, year, isice=isice)
 
     return emi_ds_summer, emi_ds_winter, ice_ds_summer, ice_ds_winter
+
+
+def read_emi_ice_files_monthly(year, file_type1, emi_var, file_type2, atm_var, exp_idx, isice=False):
+    """
+    This function reads the data from a certain file type
+    :var year: list of min and max years to filter the data
+    :param file_type1: string with emission alias for file name
+    :param emi_var: string with emission variable alias
+    :param file_type2: string with atmosphere alias for file name
+    :param atm_var: string with atmosphere variable alias
+    :param exp_idx: specifies the experiment id (see global_vars.py)
+    :param isice: boolean to identify if the data refers to sea ice
+    :return: dataset with seasonal values of emission and ice concentration
+    (emi_summer, emi_winter, ice_summer, ice_winter)
+    """
+    mod_dir = global_vars.model_output[exp_idx]
+    exp = global_vars.experiments[exp_idx]
+    files1 = glob.glob(mod_dir + exp + f'*01_{file_type1}.nc')
+    files2 = glob.glob(mod_dir + exp + f'*01_{file_type2}.nc')
+
+    files_filter_2 = files2
+    files_filter_1 = files1
+    files_filter_2.sort()
+    files_filter_1.sort()
+
+    emi_ds = xr.open_mfdataset(files_filter_1,
+                               concat_dim='time',
+                               combine='nested',
+                               preprocess=lambda ds:
+                               ds[emi_var])
+    ice_ds = xr.open_mfdataset(files_filter_2,
+                               concat_dim='time',
+                               combine='nested',
+                               preprocess=lambda ds:
+                               ds[[atm_var]])
+
+    emi_ds_mo = []
+    ice_ds_mo = []
+    for m in range(12):
+        print(m)
+        emi_ds_m = sel_var_season(emi_ds,
+                                'monthly',
+                                [m+1],
+                                [1989, 2020])
+        ice_ds_m = sel_var_season(ice_ds,
+                                'monthly',
+                                [m+1],
+                                year,
+                                isice=isice)
+        emi_ds_mo.append(emi_ds_m)
+        ice_ds_mo.append(ice_ds_m)
+
+        fac = global_vars.factor_kg_to_ng
+        import calendar
+        months_names = list(calendar.month_name)[1:]
+        # for em, ic, mo in zip(emi_ds_m, ice_ds_m, months_names):
+        plot_maps.plot_emi_month(emi_ds_m * fac,
+                                 ice_ds_m,
+                                 'emi',
+                                 '_Surface_emission_flux' + months_names[m],
+                                 'MOA',
+                                 months_names[m],
+                                 plot_ice=True)
+
+    return emi_ds_mo, ice_ds_mo
+
+
 
 def read_nc_file(files, var):
     """
@@ -281,3 +350,14 @@ def read_vars_per_seasons(sum_month, win_month, years):
             [burden_summer, burden_winter],
             [wdep_summer, wdep_winter],
             [ice_summer, ice_winter])
+
+def read_vars_per_month(years):
+    emi, ice = (
+        read_emi_ice_files_monthly(years,
+                           'emi',
+                           ['emi_POL', 'emi_PRO', 'emi_LIP'],
+                           'echam',
+                           'seaice',
+                           0,
+                           isice=True))
+

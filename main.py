@@ -11,7 +11,9 @@ try:
 except OSError:
     pass
 
+read_files.read_vars_per_month([1990, 2004])
 
+exit()
 # Plot global map of burden and emission
 plot_maps.plot_global_average_maps(thirty_yrs)
 
