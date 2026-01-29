@@ -4,8 +4,7 @@ import xarray as xr
 import glob
 import numpy as np
 
-import plot_maps
-import utils
+from emi_burden_maps import plot_maps
 
 
 def read_tot_moa_emi_burden(thirty_yrs=False):

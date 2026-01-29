@@ -1,7 +1,6 @@
-import read_files
-import global_vars, plot_maps
+from utils_functions import read_files, global_vars
+from emi_burden_maps import plot_maps
 import matplotlib.pyplot as plt
-import xarray as xr
 
 num_summer, num_winter, dens_summer, dens_winter = [], [], [], []
 for idx, file_dir in enumerate(global_vars.experiments):
@@ -26,5 +25,5 @@ for idx,var_na in enumerate(var_names):
     num_diff = ((num_summer[0][var_na] * dens_summer[0]['rhoam1']).compute() -
                 (num_summer[1][var_na] * dens_summer[1]['rhoam1']).compute()).to_dataset(name='diff')
     print(num_diff.max().values, num_diff.min().values)
-    plot_maps.each_fig(fig, num_diff['diff'].isel(lev=46)/factor[idx], ['', f'{var_na} MOA_exp - BASE'], units[idx], [-0.5, 0.5], 'coolwarm')
+    plot_maps.each_fig(fig, num_diff['diff'].isel(lev=46) / factor[idx], ['', f'{var_na} MOA_exp - BASE'], units[idx], [-0.5, 0.5], 'coolwarm')
     plt.savefig(f'{global_vars.plot_dir}/Diff_MOA_exp_BASE_{var_na}.png', dpi=300, bbox_inches="tight")

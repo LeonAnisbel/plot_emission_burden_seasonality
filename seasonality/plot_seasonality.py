@@ -2,10 +2,8 @@ import pickle
 from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import matplotlib.pyplot as plt
-import xarray as xr
-import global_vars
-import utils
-from utils import get_var_reg, regions, get_conds
+from utils_functions import utils, global_vars
+from utils_functions.utils import get_var_reg, regions, get_conds
 import pandas as pd
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
@@ -331,7 +329,7 @@ def plot_all_seasonality(dict_seasonality):
                                 sst_mean,
                                 wind])
     fig.tight_layout()
-    plt.savefig(f'Multiannual_monthly_emission_trends_poles.png',
+    plt.savefig(f'{global_vars.plot_dir}/Multiannual_monthly_emission_trends_poles.png',
                 dpi=300,
                 bbox_inches="tight")
 
@@ -383,7 +381,7 @@ def create_pkl_files(data, var_na):
     :param var_na: file name
     :return: None
     """
-    with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "wb") as File:
+    with open(f"../outputs/pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "wb") as File:
         pickle.dump(data, File)
 
 def read_pkl_files(var_na):
@@ -392,7 +390,7 @@ def read_pkl_files(var_na):
     :param var_na: file name
     :return: data
     """
-    with open(f"./pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "rb") as File:
+    with open(f"../outputs/pd_files_{global_vars.lat_arctic_lim}/{var_na}_seasonality.pkl", "rb") as File:
         var = pickle.load(File)
     return var
 

@@ -9,9 +9,8 @@ import matplotlib.path as mpath
 from matplotlib import ticker as mticker
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER
 import cartopy.feature as cfeature
-import matplotlib.colors as mplcolors
 
-import plot_seasonality
+from seasonality import plot_seasonality
 import read_files
 import utils
 
@@ -769,8 +768,8 @@ if __name__ == '__main__':
     utils.get_mean_max_moa(emi_moa[0] * fac, 'summer')
     utils.get_mean_max_moa(emi_moa[1] * fac, 'winter')
 
-    utils.get_mean_max_SS_SIC(emi_ss[0] * fac , 'emi_SS', 'summer')
-    utils.get_mean_max_SS_SIC(emi_ss[1] * fac , 'emi_SS', 'winter')
+    utils.get_mean_max_SS_SIC(emi_ss[0] * fac, 'emi_SS', 'summer')
+    utils.get_mean_max_SS_SIC(emi_ss[1] * fac, 'emi_SS', 'winter')
 
 
     plot_emi_season(emi_moa[0] * fac,

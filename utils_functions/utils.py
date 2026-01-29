@@ -193,7 +193,7 @@ def get_weights_pole(mod_dir, exp, m, gboxarea_region, whole_arctic=False):
     gboxarea = read_files.read_nc_file(files, 'gboxarea')
     if whole_arctic:
         gboxarea_pole = gboxarea.where(gboxarea.lat > global_vars.lat_arctic_lim
-, drop=True)
+                                       , drop=True)
     else:
         gboxarea_pole = gboxarea_region
     weights = gboxarea_pole/ gboxarea_pole.sum(dim=('lat', 'lon'))

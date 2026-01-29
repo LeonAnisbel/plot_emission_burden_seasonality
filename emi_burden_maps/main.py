@@ -1,19 +1,13 @@
 import os
 
-import plot_maps, read_files, global_vars
-import plot_seasonality
+from utils_functions import read_files, global_vars
+from emi_burden_maps import plot_maps
+from seasonality import plot_seasonality
 
 thirty_yrs = True  # change to False for 10 yrs mean plot (2009-2019)
 
-
-try:
-    os.makedirs(global_vars.plot_dir)
-except OSError:
-    pass
-
 read_files.read_vars_per_month([1990, 2004])
 
-exit()
 # Plot global map of burden and emission
 plot_maps.plot_global_average_maps(thirty_yrs)
 
@@ -44,5 +38,5 @@ for idx, yrs in enumerate(years_list):
                                     'emi_SS': emi_ss[i],}
 
 # store dictionary in a pkl file
-plot_seasonality.create_pkl_files(datasets_dict, global_vars.pkl_file_title+'_15_years_aver')
+plot_seasonality.create_pkl_files(datasets_dict, global_vars.pkl_file_title + '_15_years_aver')
 
